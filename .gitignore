@@ -1,4 +1,5 @@
 /confusionMatrix
+Data/MNIST
 *.o
 cifar10
 cifar100
@@ -11,6 +12,7 @@ casia3d
 shrec2015
 shrec2015_
 mnist
+modelnet
 kagglePlankton
 kagglePlankton2
 kagglePlanktonQuick
