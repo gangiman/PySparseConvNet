@@ -1,6 +1,7 @@
 #pragma once
 #include "SpatiallySparseDataset.h"
 #include "OpenCVPicture.h"
+#include <map>
 
 class OpenCVLabeledDataSet : public SpatiallySparseDataset {
 public:

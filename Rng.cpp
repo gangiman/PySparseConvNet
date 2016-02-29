@@ -1,5 +1,11 @@
 #define RNG_CPP
 #include "Rng.h"
+#include <sys/time.h>
+#include <time.h>
+
+#include <mach/clock.h>
+#include <mach/mach.h>
+
 #include <iostream>
 #include <algorithm>
 #include <chrono>
@@ -9,7 +15,18 @@ RNG::RNG() : stdNormal(0, 1), uniform01(0, 1) {
   // std::chrono::high_resolution_clock::now().time_since_epoch().count();
   // std::mt19937 gen(seed);
   timespec ts;
+#ifdef TARGET_OS_MAC
+  clock_serv_t cclock;
+  mach_timespec_t mts;
+  host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
+  clock_get_time(cclock, &mts);
+  mach_port_deallocate(mach_task_self(), cclock);
+  ts.tv_sec = mts.tv_sec;
+  ts.tv_nsec = mts.tv_nsec;
+#elif defined __linux__
   clock_gettime(CLOCK_REALTIME, &ts);
+#endif
+
   RNGseedGeneratorMutex.lock();
   gen.seed(RNGseedGenerator() + ts.tv_nsec);
   RNGseedGeneratorMutex.unlock();
