@@ -1,0 +1,64 @@
+// Try adding normal vectors to input data.
+
+// Data from http://www.icst.pku.edu.cn/zlian/shrec15-non-rigid/index.htm
+// 50 classes, 24 exemplars per class: alien ants armadillo bird1 bird2 camel
+// cat centaur twoballs dinosaur dog1 dog2 glasses gorilla hand horse lamp paper
+// man octopus pliers rabbit santa scissor shark snake spider dino_ske flamingo
+// woman Aligator Bull Chick Deer Dragon Elephant Frog Giraffe Kangaroo Mermaid
+// Mouse Nunchaku MantaRay Ring Robot Sumotori Tortoise Watch Weedle Woodman
+
+#include "SpatiallySparseDatasetModelNet.h"
+#include <vector>
+#include <iostream>
+#include <fstream>
+#include <string>
+#include "OpenCVPicture.h"
+#include "Off3DFormatPicture.h"
+
+//#include <sys/types.h>
+#include <dirent.h>
+#include <errno.h>
+
+
+std::vector<std::string> getdir (std::string dir)
+{
+  std::vector<std::string> files = std::vector<std::string>();
+  DIR *dp;
+  struct dirent *dirp;
+  if((dp = opendir(dir.c_str())) == NULL) {
+    std::cout << "Error(" << errno << ") opening " << dir << std::endl;
+    return files;
+  }
+  char dot = '.';
+  while ((dirp = readdir(dp)) != NULL) {
+    std::string entery = std::string(dirp->d_name);
+    if (entery.at(0) != dot){
+      files.push_back(entery);
+    }
+  }
+  closedir(dp);
+  return files;
+}
+
+SpatiallySparseDataset ModelNetDataSet(int renderSize, int kFold, int fold, bool is_train) {
+  SpatiallySparseDataset dataset;
+  std::string mode = is_train ? std::string("train") : std::string("test");
+  dataset.name = "ModelNet (Train subset)";
+  dataset.type = is_train ? TRAINBATCH : TESTBATCH;
+  dataset.nFeatures = 1;
+  std::string basedir = std::string("Data/ModelNet/");
+  std::vector<std::string> classes = getdir(basedir);
+  dataset.nClasses = classes.size();
+  sort(classes.begin(), classes.end());
+  for (unsigned int class_id = 0;class_id < classes.size();class_id++) {
+    std::string class_dir = basedir + classes[class_id] + std::string("/") + mode;
+    std::vector<std::string> files = getdir(class_dir);
+    for (int i = 0; i < files.size(); ++i) {
+      std::string filename = class_dir + std::string("/") + files[i];
+      dataset.pictures.push_back(
+              new OffSurfaceModelPicture(filename, renderSize, class_id));
+    }
+  }
+
+  return dataset;
+};

@@ -41,6 +41,9 @@ cifar100: $(OBJCV) SpatiallySparseDatasetCIFAR100.o cifar100.o
 shrec2015: $(OBJ) Off3DFormatPicture.o SpatiallySparseDatasetSHREC2015.o shrec2015.o
 	$(NVCC) -o shrec2015 $(OBJ) Off3DFormatPicture.o SpatiallySparseDatasetSHREC2015.o shrec2015.o $(LIBS) $(NVCCFLAGS)
 
+modelnet: $(OBJ) Off3DFormatPicture.o SpatiallySparseDatasetModelNet.o modelnet.o
+    $(NVCC) -o modelnet $(OBJ) Off3DFormatPicture.o SpatiallySparseDatasetModelNet.o modelnet.o $(LIBS) $(NVCCFLAGS)
+
 shrec2015_: $(OBJ) Off3DFormatPicture.o SpatiallySparseDatasetSHREC2015.o shrec2015_.o
 	$(NVCC) -o shrec2015_ $(OBJ) Off3DFormatPicture.o SpatiallySparseDatasetSHREC2015.o shrec2015_.o $(LIBS) $(NVCCFLAGS)
 
