@@ -2,10 +2,10 @@
 #include "Rng.h"
 #include <sys/time.h>
 #include <time.h>
-
+#ifdef TARGET_OS_MAC
 #include <mach/clock.h>
 #include <mach/mach.h>
-
+#endif
 #include <iostream>
 #include <algorithm>
 #include <chrono>
