@@ -1,6 +1,10 @@
 #include "Off3DFormatPicture.h"
 #include <string>
 #include <fstream>
+#include <iostream>
+#include <sstream>
+#include <algorithm>
+#include <iterator>
 
 int mapToGridOFF(float coord, int inputFieldSize) {
   return std::max(
@@ -40,7 +44,7 @@ void drawTriangleOFF(SparseGrid &grid, int inputFieldSize,
           mapToGridOFF(p2, inputFieldSize);
       if (grid.mp.find(n) == grid.mp.end()) {
         grid.mp[n] = nSpatialSites++;
-        features.push_back(1);
+        features.push_back(1); // NOTE: here we can push back vector of features
       }
     }
   }
@@ -49,11 +53,29 @@ void drawTriangleOFF(SparseGrid &grid, int inputFieldSize,
 OffSurfaceModelPicture::OffSurfaceModelPicture(std::string filename,
                                                int renderSize, int label)
     : Picture(label), renderSize(renderSize) {
-  std::ifstream file(filename.c_str());
+  picture_path = filename;
+}
+
+void OffSurfaceModelPicture::loadPicture() {
+  std::ifstream file(picture_path.c_str());
   std::string off;
   getline(file, off);
+
   int nPoints, nTriangles, nLines;
-  file >> nPoints >> nTriangles >> nLines;
+
+  // In some files the first line is concatenated with the second line like this:
+  // OFF348 256 0
+  // So, we need to parse this situation
+  if (off.compare("OFF") != 0) {
+    std::istringstream off_stream(off);
+    std::vector<std::string> words{std::istream_iterator<std::string>{off_stream},
+                                   std::istream_iterator<std::string>{}};
+    nPoints = std::stoi(words[0].substr(3));
+    nTriangles = std::stoi(words[1]);
+    nLines = std::stoi(words[2]);
+  } else {
+    file >> nPoints >> nTriangles >> nLines;
+  }
   points.set_size(nPoints, 3);
   surfaces.resize(nTriangles);
   for (int i = 0; i < nPoints; i++)

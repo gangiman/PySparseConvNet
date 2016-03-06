@@ -11,9 +11,9 @@ void SpatiallySparseDataset::summary() {
   std::cout << "nPictures:       " << pictures.size() << std::endl;
   std::cout << "nClasses:        " << nClasses << std::endl;
   std::vector<int> count(nClasses);
-  for (auto pic : pictures) {
+  for (auto pic : pictures)
     count[pic->label]++;
-  }
+
   std::cout << "nPictures/class: ";
   for (auto i : count)
     std::cout << i << " ";

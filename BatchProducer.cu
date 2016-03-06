@@ -43,31 +43,32 @@ void BatchProducer::preprocessBatch(int c, int cc, RNG &rng) {
   cnn.batchPool[cc].interfaces[0].nFeatures = dataset.nFeatures;
   cnn.batchPool[cc].interfaces[0].spatialSize = spatialSize;
   cnn.batchPool[cc].interfaces[0].featuresPresent.hVector() =
-      range(dataset.nFeatures);
-  for (int i = c * batchSize;
-       i < min((c + 1) * batchSize, (int)(dataset.pictures.size())); i++) {
+          range(dataset.nFeatures);
+  int n_pictures = dataset.pictures.size();
+  for (int i = c * batchSize; i < min((c + 1) * batchSize, n_pictures); i++) {
+    dataset.pictures[permutation[i]]->loadPicture();
     Picture *pic = dataset.pictures[permutation[i]]->distort(rng, dataset.type);
     cnn.batchPool[cc].sampleNumbers.push_back(permutation[i]);
     cnn.batchPool[cc].batchSize++;
     cnn.batchPool[cc].interfaces[0].grids.push_back(SparseGrid());
     cnn.batchPool[cc].labels.hVector().push_back(pic->label);
     pic->codifyInputData(
-        cnn.batchPool[cc].interfaces[0].grids.back(),
-        cnn.batchPool[cc].interfaces[0].sub->features.hVector(),
-        cnn.batchPool[cc].interfaces[0].nSpatialSites,
-        cnn.batchPool[cc].interfaces[0].spatialSize);
+            cnn.batchPool[cc].interfaces[0].grids.back(),
+            cnn.batchPool[cc].interfaces[0].sub->features.hVector(),
+            cnn.batchPool[cc].interfaces[0].nSpatialSites,
+            cnn.batchPool[cc].interfaces[0].spatialSize);
     if (pic != dataset.pictures[permutation[i]])
       delete pic;
   }
   assert(cnn.batchPool[cc].interfaces[0].sub->features.size() ==
          cnn.batchPool[cc].interfaces[0].nFeatures *
-             cnn.batchPool[cc].interfaces[0].nSpatialSites);
+         cnn.batchPool[cc].interfaces[0].nSpatialSites);
   if (cnn.inputNormalizingConstants.size() > 0) {
     std::vector<float> &features =
-        cnn.batchPool[cc].interfaces[0].sub->features.hVector();
+            cnn.batchPool[cc].interfaces[0].sub->features.hVector();
     for (int i = 0; i < features.size(); ++i)
       features[i] *= cnn.inputNormalizingConstants
-                         [i % (cnn.batchPool[cc].interfaces[0].nFeatures)];
+      [i % (cnn.batchPool[cc].interfaces[0].nFeatures)];
   }
   for (int i = 0; i < cnn.layers.size(); i++)
     cnn.layers[i]->preprocess(cnn.batchPool[cc],

@@ -14,6 +14,7 @@ public:
   std::string name;
   std::string header;
   std::vector<Picture *> pictures;
+  int renderSize;
   int nFeatures;
   int nClasses;
   batchType type;

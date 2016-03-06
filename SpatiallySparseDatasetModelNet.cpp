@@ -40,15 +40,22 @@ std::vector<std::string> getdir (std::string dir)
   return files;
 }
 
-SpatiallySparseDataset ModelNetDataSet(int renderSize, int kFold, int fold, bool is_train) {
+SpatiallySparseDataset ModelNetDataSet(int renderSize, int kFold, int fold, batchType batch_type) {
   SpatiallySparseDataset dataset;
-  std::string mode = is_train ? std::string("train") : std::string("test");
-  dataset.name = "ModelNet (Train subset)";
-  dataset.type = is_train ? TRAINBATCH : TESTBATCH;
+  dataset.type = batch_type;
+  std::string mode;
+  if (batch_type == TRAINBATCH) {
+    dataset.name = "ModelNet (Train subset)";
+    mode = std::string("train");
+  } else if (batch_type == TESTBATCH) {
+    dataset.name = "ModelNet (Validation subset)";
+    mode = std::string("test");
+  } else {}
   dataset.nFeatures = 1;
   std::string basedir = std::string("Data/ModelNet/");
   std::vector<std::string> classes = getdir(basedir);
   dataset.nClasses = classes.size();
+  std::cout << "Number of classes: " << dataset.nClasses << std::endl;
   sort(classes.begin(), classes.end());
   for (unsigned int class_id = 0;class_id < classes.size();class_id++) {
     std::string class_dir = basedir + classes[class_id] + std::string("/") + mode;

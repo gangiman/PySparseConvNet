@@ -30,6 +30,7 @@ SparseConvNetCUDA::SparseConvNetCUDA(int dimension, int nInputFeatures,
   assert(nBatchProducerThreads <= N_MAX_BATCH_PRODUCER_THREADS);
   std::cout << "Sparse CNN - dimension=" << dimension
             << " nInputFeatures=" << nInputFeatures << " nClasses=" << nClasses
+            << " nThreads=" << nBatchProducerThreads
             << std::endl;
   nOutputFeatures = nInputFeatures;
   // Set up a pool of SpatiallySparseBatches

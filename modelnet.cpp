@@ -12,10 +12,10 @@ int main(int lenArgs, char *args[]) {
   if (lenArgs > 1)
     fold = atoi(args[1]);
   std::cout << "Fold: " << fold << std::endl;
-  SpatiallySparseDataset trainSet = ModelNetDataSet(40, 6, fold, true);
+  SpatiallySparseDataset trainSet = ModelNetDataSet(40, 6, fold, TRAINBATCH);
   trainSet.summary();
-//  trainSet.repeatSamples(10);
-  SpatiallySparseDataset testSet = ModelNetDataSet(40, 6, fold, false);
+  trainSet.repeatSamples(10);
+  SpatiallySparseDataset testSet = ModelNetDataSet(40, 6, fold, TESTBATCH);
   testSet.summary();
 
   DeepC2 cnn(3, 5, 32, VLEAKYRELU, trainSet.nFeatures, trainSet.nClasses, 0.0f,
