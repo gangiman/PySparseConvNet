@@ -1,6 +1,6 @@
 CC=g++
-DEBUG ?= 1
-ifeq (DEBUG, 1)
+DEBUG ?= 0
+ifeq ($(DEBUG), 1)
     CFLAGS=--std=c++11 -g
     NVCCFLAGS=--std=c++11 -arch sm_20 -g
 else
