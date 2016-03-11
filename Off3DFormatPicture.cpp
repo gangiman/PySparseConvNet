@@ -54,6 +54,7 @@ OffSurfaceModelPicture::OffSurfaceModelPicture(std::string filename,
                                                int renderSize, int label)
     : Picture(label), renderSize(renderSize) {
   picture_path = filename;
+  is_loaded = false;
 }
 
 void OffSurfaceModelPicture::loadPicture() {
@@ -85,6 +86,7 @@ void OffSurfaceModelPicture::loadPicture() {
     int three;
     file >> three >> surfaces[i][0] >> surfaces[i][1] >> surfaces[i][2];
   }
+  is_loaded = true;
 }
 
 OffSurfaceModelPicture::~OffSurfaceModelPicture() {}
