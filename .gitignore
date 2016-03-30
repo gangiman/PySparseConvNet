@@ -20,3 +20,11 @@ kagglePlanktonQuick
 cifar10indexLearning
 old/
 Data/plankton-JO-2/
+
+
+.DS_Store
+.cproject
+.idea/
+.project
+Data/
+docs/

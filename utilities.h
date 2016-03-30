@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <cuda_runtime_api.h>
 // return vector 0,1,...,n-1
 std::vector<int> range(int n);
 
