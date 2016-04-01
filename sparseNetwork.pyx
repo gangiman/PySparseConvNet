@@ -5,9 +5,6 @@ from _SparseConvNet cimport TESTBATCH
 from _SparseConvNet cimport NetworkInNetworkLayer
 from _SparseConvNet cimport OffSurfaceModelPicture
 from _SparseConvNet cimport SpatiallySparseDataset
-from _SparseConvNet cimport Picture
-# from _SparseConvNet cimport ROTATE_GENERAL
-# from _SparseConvNet cimport ROTATE_Z_AXIS
 from libcpp.string cimport string
 from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as inc
@@ -52,13 +49,6 @@ cdef class SparseNetwork:
                        float learningRate=0, float momentum=0.99):
         """
         """
-        # print("In processDataaset function, dataset.name={0}, batchSize={1}, learningRate={2}, momentum={3}".format(dataset.name, batchSize, learningRate,momentum))
-        # cdef int i
-        # cdef OffSurfaceModelPicture* temp
-        # print("Actual label of picture after casting:")
-        # for i in range(dataset.ssd.pictures.size()+1):
-        #     print("i:{2}, label: {0}, is_loaded: {1}".format(dataset.ssd.pictures[i].label, dataset.ssd.pictures[i].is_loaded, i))
-        dataset.ssd.summary()
         self.net.processDataset(deref(dataset.ssd), batchSize, learningRate, momentum)
 
     def processDatasetRepeatTest(self, dataset, batchSize=100, nReps=12,
@@ -158,6 +148,9 @@ cdef class SparseDataset:
         self.ssd.nFeatures = nFeatures
         self.ssd.nClasses = nClasses
 
+    def summary(self):
+        self.ssd.summary()
+
     @property
     def name(self):
         return self.ssd.name
@@ -179,22 +172,19 @@ cdef class Off3DPicture:
     cdef int nSpatialSites
 
     def __cinit__(self, string filename, int renderSize, int label=-1, bool load=False):
-#         print("""Init picture {}
-# renderSize {}
-# label {}
-# load {}""".format(filename, renderSize, label, load))
         self.nSpatialSites = 0
         self.pic = new OffSurfaceModelPicture(filename, renderSize, label)
-        # print("actual label is {0}".format(self.pic.label))
         if load:
             self.pic.loadPicture()
 
-    def __dealloc__(self):
-        del self.pic
+    #def __dealloc__(self):
+    #    del self.pic
     #     # del self.grid
     #     # del self.features
 
     def codifyInputData(self, int spatialSize):
+        if not self.pic.is_loaded:
+            self.pic.loadPicture()
         self.features.resize(0)
         self.pic.codifyInputData(self.grid, self.features,
                                  self.nSpatialSites, spatialSize)

@@ -11,12 +11,12 @@ void SpatiallySparseDataset::summary() {
   std::cout << "nPictures:       " << pictures.size() << std::endl;
   std::cout << "nClasses:        " << nClasses << std::endl;
   std::vector<int> count(nClasses);
-  for (auto pic : pictures)
-    count[pic->label]++;
+  for (int _i=0;_i<pictures.size();_i++)
+    count[pictures[_i]->label]++;
 
   std::cout << "nPictures/class: ";
-  for (auto i : count)
-    std::cout << i << " ";
+  for (int _i=0;_i<pictures.size();_i++)
+    std::cout << count[_i] << " ";
   std::cout << std::endl;
 }
 SpatiallySparseDataset SpatiallySparseDataset::extractValidationSet(float p) {
@@ -34,21 +34,6 @@ SpatiallySparseDataset SpatiallySparseDataset::extractValidationSet(float p) {
     pictures.pop_back();
   }
   return val;
-}
-void SpatiallySparseDataset::subsetOfClasses(std::vector<int> activeClasses) {
-  nClasses = activeClasses.size();
-  std::vector<Picture *> p = pictures;
-  pictures.clear();
-  for (unsigned int i = 0; i < p.size(); ++i) {
-    std::vector<int>::iterator it;
-    it = find(activeClasses.begin(), activeClasses.end(), p[i]->label);
-    if (it != activeClasses.end()) {
-      p[i]->label = it - activeClasses.begin();
-      pictures.push_back(p[i]);
-      // std::cout << pictures.size() << " " << p[i]->identify() << std::endl;
-    } else
-      delete p[i];
-  }
 }
 
 // Assume there are at least n of each class in the dataset

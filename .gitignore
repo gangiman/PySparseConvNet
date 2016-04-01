@@ -16,3 +16,7 @@ SparseConvNet/weights/
 
 build/
 *.log
+
+
+sparseNetwork.cpp
+notebooks/.ipynb_checkpoints/

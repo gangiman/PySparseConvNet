@@ -48,6 +48,8 @@ sparse_conv_net_sources = [
     # "vectorHash.cpp"
 ]
 
+gpp_flags = ["--std=c++11", "-fPIC", "-g" if os.environ.get("DEBUG", False) else "-O3"]
+
 ext = Extension('PySparseConvNet',
                 sources=base_sources + [
                     os.path.join(sparse_conv_net_path, _path)
@@ -62,8 +64,7 @@ ext = Extension('PySparseConvNet',
                     "python2.7"],
                 language='c++',
                 extra_compile_args={
-                    # 'g++': ["--std=c++11", "-O3", "-fPIC"],
-                    'g++': ["--std=c++11", "-fPIC", "-g"],
+                    'g++': gpp_flags, 
                     'nvcc': ['-arch=sm_20', '--std=c++11', '-O3',
                              "-Xcompiler", "-fPIC"]
                 },

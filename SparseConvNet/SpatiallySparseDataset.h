@@ -1,5 +1,5 @@
 #pragma once
-#include "Picture.h"
+#include "Off3DFormatPicture.h"
 #include "Rng.h"
 #include <vector>
 #include <string>
@@ -13,7 +13,7 @@ class SpatiallySparseDataset {
 public:
   std::string name;
   std::string header;
-  std::vector<Picture *> pictures;
+  std::vector<OffSurfaceModelPicture *> pictures;
   int renderSize;
   int nFeatures;
   int nClasses;

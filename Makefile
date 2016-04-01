@@ -7,10 +7,9 @@ ifeq ($(shell uname -s),Linux)
 endif
 
 clean:
-	rm -r build/ *.cpp *.so || true
-fullclean:
+	rm -r build/ *.pyc *.cpp *.so || true
+fullclean: clean
 	@$(MAKE) -C SparseConvNet $(MAKECMDGOALS)
-	rm -r build/ *.cpp *.so || true
 
 build: clean
 	python setup.py build_ext -if || true

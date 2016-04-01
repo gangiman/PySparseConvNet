@@ -20,12 +20,10 @@ class TestHighLevelLogic(unittest.TestCase):
         self.assertEqual(type(network), SparseNetwork)
         layers = load_and_get_weights(network)
         self.assertEqual(len(layers), 18)
-        pprint(layers)
 
     def test_Off_file_loading(self):
         pairs = load_3d_off()
         self.assertTrue(len(pairs) > 0)
-        # pprint(pairs)
 
     def test_dataset_creation(self):
         with self.assertRaises(ValueError):
@@ -41,11 +39,11 @@ class TestTraining(unittest.TestCase):
         network = create_dC2()
         print("Created network")
         dataset = generate_modelnet_dataset()
+        dataset.summary()
         print("Created dataset {0}".format(dataset.name))
-        time.sleep(6)
-        for epoch in xrange(1, 6):
+        for epoch in xrange(1, 2):
             learning_rate = 0.003 * math.exp(-0.05 / 2 * epoch)
-            print("epoch {0}, lr={1} ".format(epoch, learning_rate))
+            print("epoch {0}, lr={1} ".format(epoch, learning_rate),end='')
             network.processDataset(
                 dataset, batchSize=10, learningRate=learning_rate)
 
