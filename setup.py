@@ -64,7 +64,7 @@ ext = Extension('PySparseConvNet',
                     "python2.7"],
                 language='c++',
                 extra_compile_args={
-                    'g++': gpp_flags, 
+                    'g++': gpp_flags,
                     'nvcc': ['-arch=sm_20', '--std=c++11', '-O3',
                              "-Xcompiler", "-fPIC"]
                 },

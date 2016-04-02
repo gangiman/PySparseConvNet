@@ -1,6 +1,5 @@
 from __future__ import print_function
 import unittest
-from pprint import pprint
 
 from PySparseConvNet import SparseNetwork
 from PySparseConvNet import SparseDataset
@@ -10,7 +9,6 @@ from deepC2Network import load_and_get_weights
 from deepC2Network import load_3d_off
 from deepC2Network import generate_modelnet_dataset
 
-import time
 import math
 
 class TestHighLevelLogic(unittest.TestCase):
