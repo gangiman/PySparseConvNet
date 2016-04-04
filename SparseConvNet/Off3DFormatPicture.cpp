@@ -49,11 +49,10 @@ void drawTriangleOFF(SparseGrid &grid, int inputFieldSize,
     }
   }
 }
-std::string OffSurfaceModelPicture::identify() { return std::string(); }
+
 OffSurfaceModelPicture::OffSurfaceModelPicture(std::string filename,
-                                               int renderSize, int _label)
-    : renderSize(renderSize) {
-  label = _label;
+                                               int renderSize, int label)
+    : Picture(label), renderSize(renderSize) {
   picture_path = filename;
   is_loaded = false;
 }
@@ -144,7 +143,7 @@ void OffSurfaceModelPicture::codifyInputData(SparseGrid &grid,
   }
 }
 
-OffSurfaceModelPicture *OffSurfaceModelPicture::distort(RNG &rng, batchType type) {
+Picture *OffSurfaceModelPicture::distort(RNG &rng, batchType type) {
   OffSurfaceModelPicture *pic = new OffSurfaceModelPicture(*this);
   pic->random_rotation(rng);
   pic->normalize();

@@ -7,9 +7,7 @@ from PySparseConvNet import SparseDataset
 from deepC2Network import create_dC2
 from deepC2Network import load_and_get_weights
 from deepC2Network import load_3d_off
-from deepC2Network import generate_modelnet_dataset
-
-import math
+from deepC2Network import learn_simple_network
 
 class TestHighLevelLogic(unittest.TestCase):
 
@@ -34,16 +32,7 @@ class TestHighLevelLogic(unittest.TestCase):
 class TestTraining(unittest.TestCase):
 
     def test_simple_training(self):
-        network = create_dC2()
-        print("Created network")
-        dataset = generate_modelnet_dataset()
-        dataset.summary()
-        print("Created dataset {0}".format(dataset.name))
-        for epoch in xrange(1, 2):
-            learning_rate = 0.003 * math.exp(-0.05 / 2 * epoch)
-            print("epoch {0}, lr={1} ".format(epoch, learning_rate),end='')
-            network.processDataset(
-                dataset, batchSize=10, learningRate=learning_rate)
+        learn_simple_network(limit=-1)
 
 if __name__ == '__main__':
     unittest.main()

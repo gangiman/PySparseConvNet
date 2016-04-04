@@ -206,6 +206,16 @@ cdef extern from "<armadillo>" namespace "arma":
         pass
 
 
+cdef extern from "SparseConvNet/Picture.h":
+    cdef cppclass Picture:
+        Picture(int label)
+        void codifyInputData(SparseGrid &grid, vector[float] &features,
+                             int &nSpatialSites, int spatialSize)
+        Picture *distort(RNG &rng, batchType type)
+        void loadPicture()
+        bool is_loaded
+        int label # -1 for unknown
+
 
 cdef extern from "SparseConvNet/Off3DFormatPicture.h":
     cdef cppclass OffSurfaceModelPicture:
@@ -223,7 +233,7 @@ cdef extern from "SparseConvNet/Off3DFormatPicture.h":
         void affineTransform(RNG &rng, float alpha)
         void codifyInputData(SparseGrid &grid, vector[float] &features,
                              int &nSpatialSites, int spatialSize)
-        OffSurfaceModelPicture *distort(RNG &rng, batchType type)
+        Picture *distort(RNG &rng, batchType type)
 
 
 
@@ -232,7 +242,7 @@ cdef extern from "SparseConvNet/SpatiallySparseDataset.h":
         string name
         # RNG rng
         # string header
-        vector[OffSurfaceModelPicture *] pictures
+        vector[Picture *] pictures
         int renderSize
         int nFeatures
         int nClasses

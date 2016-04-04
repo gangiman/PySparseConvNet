@@ -54,7 +54,7 @@ void BatchProducer::preprocessBatch(int c, int cc, RNG &rng) {
       dataset.pictures[permutation[i]]->loadPicture();
     }
 
-    OffSurfaceModelPicture *pic = dataset.pictures[permutation[i]]->distort(rng, dataset.type);
+    Picture *pic = dataset.pictures[permutation[i]]->distort(rng, dataset.type);
     cnn.batchPool[cc].sampleNumbers.push_back(permutation[i]);
     cnn.batchPool[cc].batchSize++;
     cnn.batchPool[cc].interfaces[0].grids.push_back(SparseGrid());

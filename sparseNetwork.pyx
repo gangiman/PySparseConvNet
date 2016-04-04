@@ -4,6 +4,7 @@ from _SparseConvNet cimport TRAINBATCH
 from _SparseConvNet cimport TESTBATCH
 from _SparseConvNet cimport NetworkInNetworkLayer
 from _SparseConvNet cimport OffSurfaceModelPicture
+from _SparseConvNet cimport Picture
 from _SparseConvNet cimport SpatiallySparseDataset
 from libcpp.string cimport string
 from cython.operator cimport dereference as deref
@@ -162,7 +163,7 @@ cdef class SparseDataset:
         self.ssd.repeatSamples(nreps)
 
     def add_picture(self, Off3DPicture picture):
-        self.ssd.pictures.push_back(picture.pic)
+        self.ssd.pictures.push_back(<Picture*>picture.pic)
 
 
 cdef class Off3DPicture:
