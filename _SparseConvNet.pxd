@@ -13,6 +13,7 @@ cdef extern from "SparseConvNet/SpatiallySparseLayer.h":
 cdef extern from "SparseConvNet/SparseConvNetCUDA.h":
     cdef cppclass SparseConvNetCUDA:
         vector[SpatiallySparseLayer*] layers
+        vector[vector[float]] predict(SpatiallySparseDataset &dataset)
 
 
 cdef extern from "SparseConvNet/types.h":

@@ -10,14 +10,16 @@ void SpatiallySparseDataset::summary() {
   std::cout << "nFeatures:       " << nFeatures << std::endl;
   std::cout << "nPictures:       " << pictures.size() << std::endl;
   std::cout << "nClasses:        " << nClasses << std::endl;
-  std::vector<int> count(nClasses);
-  for (int _i=0;_i<pictures.size();_i++)
-    count[pictures[_i]->label]++;
+  if (type != UNLABELEDBATCH){
+    std::vector<int> count(nClasses);
+    for (int _i=0;_i<pictures.size();_i++)
+      count[pictures[_i]->label]++;
 
-  std::cout << "nPictures/class: ";
-  for (int _i=0;_i<count.size();_i++)
-    std::cout << count[_i] << " ";
-  std::cout << std::endl;
+    std::cout << "nPictures/class: ";
+    for (int _i=0;_i<count.size();_i++)
+      std::cout << count[_i] << " ";
+    std::cout << std::endl;
+  }
 }
 SpatiallySparseDataset SpatiallySparseDataset::extractValidationSet(float p) {
   SpatiallySparseDataset val;

@@ -320,6 +320,25 @@ float SparseConvNetCUDA::processDataset(SpatiallySparseDataset &dataset,
               << std::endl;
   return nll;
 }
+
+std::vector<std::vector<float>> SparseConvNetCUDA::predict(
+        SpatiallySparseDataset &dataset) {
+  assert(dataset.pictures.size() > 0);
+  std::vector<std::vector<float>> result_matrix;
+//  result_matrix.resize(dataset.pictures.size());
+  int batchSize = 1;
+  float learningRate, momentum;
+  std::ofstream f, g;
+  BatchProducer bp(*this, dataset, inputSpatialSize, batchSize);
+  while (SpatiallySparseBatch *batch = bp.nextBatch()) {
+    processBatch(*batch, learningRate, momentum, f, g);
+    for (int i = 0; i < batch->batchSize; i++) {
+      result_matrix.push_back(batch->probabilities[i]);
+    }
+  }
+  return result_matrix;
+}
+
 void SparseConvNetCUDA::processDatasetRepeatTest(
     SpatiallySparseDataset &dataset, int batchSize, int nReps,
     std::string predictionsFilename, std::string confusionMatrixFilename) {

@@ -2,6 +2,7 @@ from _SparseConvNet cimport SparseConvNet
 from _SparseConvNet cimport VLEAKYRELU
 from _SparseConvNet cimport TRAINBATCH
 from _SparseConvNet cimport TESTBATCH
+from _SparseConvNet cimport UNLABELEDBATCH
 from _SparseConvNet cimport NetworkInNetworkLayer
 from _SparseConvNet cimport OffSurfaceModelPicture
 from _SparseConvNet cimport Picture
@@ -130,8 +131,17 @@ cdef class SparseNetwork:
                 layer_dict['weights']['B'][:] = layer.B.hVector()[:]
         return layers_with_weights
 
+    def predict(self, SparseDataset dataset):
+        cdef vector[vector[float]] prediction_matrix
+        np_matrix = np.zeros((dataset.ssd.pictures.size(), self.nClasses), dtype=np.float64)
+        prediction_matrix = self.net.cnn.get().predict(deref(dataset.ssd))
+        np_matrix[...] = prediction_matrix
+        return np_matrix
+
+
 cdef char* _train = 'TRAINBATCH'
 cdef char* _test = 'TESTBATCH'
+cdef char* _unlabeled = 'UNLABELEDBATCH'
 
 cdef class SparseDataset:
     cdef SpatiallySparseDataset* ssd
@@ -143,6 +153,8 @@ cdef class SparseDataset:
             self.ssd.type = TRAINBATCH
         elif _type == _test:
             self.ssd.type = TESTBATCH
+        elif _type == _unlabeled:
+            self.ssd.type = UNLABELEDBATCH
         else:
             raise ValueError('Unknown type of batch!')
         self.ssd.name = name
