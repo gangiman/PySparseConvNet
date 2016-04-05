@@ -198,6 +198,7 @@ cdef class Off3DPicture:
     def codifyInputData(self, int spatialSize):
         if not self.pic.is_loaded:
             self.pic.loadPicture()
+        self.pic.normalize()
         self.features.resize(0)
         self.pic.codifyInputData(self.grid, self.features,
                                  self.nSpatialSites, spatialSize)
