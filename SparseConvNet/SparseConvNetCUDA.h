@@ -95,6 +95,8 @@ public:
   void addIndexLearnerLayer();
   float processDataset(SpatiallySparseDataset &dataset, int batchSize = 100,
                        float learningRate = 0, float momentum = 0.99);
+  std::vector<SpatiallySparseBatchInterface> layer_activations(
+        SpatiallySparseDataset &dataset);
   std::vector<std::vector<float>> predict(SpatiallySparseDataset &dataset);
   void processDatasetRepeatTest(SpatiallySparseDataset &dataset,
                                 int batchSize = 100, int nReps = 12,

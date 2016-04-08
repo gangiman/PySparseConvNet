@@ -14,6 +14,7 @@ cdef extern from "SparseConvNet/SparseConvNetCUDA.h":
     cdef cppclass SparseConvNetCUDA:
         vector[SpatiallySparseLayer*] layers
         vector[vector[float]] predict(SpatiallySparseDataset &dataset)
+        vector[SpatiallySparseBatchInterface] layer_activations(SpatiallySparseDataset &dataset)
 
 
 cdef extern from "SparseConvNet/types.h":
@@ -255,4 +256,18 @@ cdef extern from "SparseConvNet/SpatiallySparseDataset.h":
         SpatiallySparseDataset subset(int n)
         SpatiallySparseDataset balancedSubset(int n)
         void repeatSamples(int reps)
+
+
+cdef extern from "SparseConvNet/SpatiallySparseBatchInterface.h":
+    cdef cppclass SpatiallySparseBatchSubInterface:
+        vectorCUDA[float] features
+
+    cdef cppclass SpatiallySparseBatchInterface:
+        SpatiallySparseBatchSubInterface *sub
+        int nFeatures # Features per spatial location
+        vectorCUDA[int] featuresPresent # Not dropped out features per spatial location
+        int nSpatialSites # Total active spatial locations within the
+        int spatialSize   # spatialSize x spatialSize grid
+        vector[SparseGrid] grids # batchSize vectors of maps storing info on
+
 

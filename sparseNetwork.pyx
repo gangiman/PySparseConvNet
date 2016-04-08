@@ -7,6 +7,7 @@ from _SparseConvNet cimport NetworkInNetworkLayer
 from _SparseConvNet cimport OffSurfaceModelPicture
 from _SparseConvNet cimport Picture
 from _SparseConvNet cimport SpatiallySparseDataset
+from _SparseConvNet cimport SpatiallySparseBatchInterface
 from libcpp.string cimport string
 from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as inc
@@ -20,6 +21,7 @@ import numpy as np
 cimport numpy as np
 
 from copy import deepcopy
+from pprint import pprint
 
 
 
@@ -53,11 +55,15 @@ cdef class SparseNetwork:
         """
         self.net.processDataset(deref(dataset.ssd), batchSize, learningRate, momentum)
 
-    def processDatasetRepeatTest(self, dataset, batchSize=100, nReps=12,
+    def processDatasetRepeatTest(self, SparseDataset dataset, batchSize=100, nReps=12,
                                  predictionsFilename="",
                                  confusionMatrixFilename=""):
         """
         """
+        self.net.processDatasetRepeatTest(deref(dataset.ssd),
+                                          batchSize, nReps,
+                                          predictionsFilename,
+                                          confusionMatrixFilename)
 
 
     def addLeNetLayerMP(self, nFeatures, filterSize, filterStride, poolSize,
@@ -110,6 +116,11 @@ cdef class SparseNetwork:
         """
         self.net.loadWeights(baseName, epoch, momentum, firstNlayers)
 
+    def saveWeights(self, baseName, epoch, momentum=False):
+        """
+        """
+        self.net.saveWeights(baseName, epoch, momentum)
+
     def get_layers(self):
         return self.layers
 
@@ -137,6 +148,52 @@ cdef class SparseNetwork:
         prediction_matrix = self.net.cnn.get().predict(deref(dataset.ssd))
         np_matrix[...] = prediction_matrix
         return np_matrix
+
+    def layer_activations(self, SparseDataset dataset):
+        cdef vector[SpatiallySparseBatchInterface] interfaces
+        interfaces = self.net.cnn.get().layer_activations(deref(dataset.ssd))
+        cdef list list_of_interfaces = []
+        cdef list pairs = []
+        cdef SparseGridIter it
+        for _i in range(interfaces.size()):
+            it = interfaces[_i].grids[0].mp.begin()
+            pairs = []
+            while it != interfaces[_i].grids[0].mp.end():
+                pairs.append(deref(it))
+                inc(it)
+            dict_of_activations = {
+            "layer": _i,
+        "grid_size": interfaces[_i].grids[0].mp.size(),
+     "feature_size": interfaces[_i].sub.features.size(),
+    "nSpatialSites": interfaces[_i].nSpatialSites,
+      "spatialSize": interfaces[_i].spatialSize,
+        "nFeatures": interfaces[_i].nFeatures
+            }
+            pprint(dict_of_activations)
+            dict_of_activations["sparse_grid"] = deepcopy(pairs)
+            dict_of_activations["features"] = np.zeros(interfaces[_i].sub.features.size(), dtype=np.float64)
+            dict_of_activations["features"][...] = interfaces[_i].sub.features.hVector()
+            list_of_interfaces.append(dict_of_activations)
+
+        return list_of_interfaces
+
+
+    #         print("""Interface {0}:
+    # grid size {1}
+    # feature size {2}
+    # nSpatialSites {3}
+    # spatialSize {4}
+    # nFeatures {5}""".format(
+    #             _i,
+    #             interfaces[_i].grids[0].mp.size(),
+    #             interfaces[_i].sub.features.size(),
+    #             interfaces[_i].nSpatialSites,
+    #             interfaces[_i].spatialSize,
+    #             interfaces[_i].nFeatures,
+    #         ))
+    #     for layer in self.layers:
+    #         print(layer)
+
 
 
 cdef char* _train = 'TRAINBATCH'
