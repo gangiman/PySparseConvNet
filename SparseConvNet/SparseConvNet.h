@@ -23,7 +23,7 @@ public:
   std::unique_ptr<SparseConvNetCUDA> cnn;
 
   SparseConvNet(int dimension, int nInputFeatures, int nClasses,
-                int pciBusID = -1, int nTop = 1);
+                int pciBusID = -1, int nTop = 1, int nThreads = 1);
   ~SparseConvNet();
   void addLeNetLayerMP(int nFeatures, int filterSize, int filterStride,
                        int poolSize, int poolStride,

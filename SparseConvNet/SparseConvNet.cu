@@ -3,9 +3,9 @@
 #include "utilities.h"
 
 SparseConvNet::SparseConvNet(int dimension, int nInputFeatures, int nClasses,
-                             int pciBusID, int nTop)
+                             int pciBusID, int nTop, int nThreads)
     : cnn(new SparseConvNetCUDA(dimension, nInputFeatures, nClasses, pciBusID,
-                                nTop)) {}
+                                nTop, nThreads)) {}
 
 SparseConvNet::~SparseConvNet() {}
 

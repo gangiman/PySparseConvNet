@@ -33,7 +33,7 @@ cdef class SparseNetwork:
     cdef int nClasses
 
     def __cinit__(self, int dimension, int nInputFeatures, int nClasses,
-                  cudaDevice=-1, nTop=1):
+                  int cudaDevice=-1, int nTop=1, int nThreads=1):
         """Initializing Network.
 
         dimension - number of input dimension
@@ -41,7 +41,7 @@ cdef class SparseNetwork:
         """
         self.layers = []
         self.net = new SparseConvNet(dimension, nInputFeatures,
-                                     nClasses, cudaDevice, nTop)
+                                     nClasses, cudaDevice, nTop, nThreads)
         self.dimension = dimension
         self.nInputFeatures = nInputFeatures
         self.nClasses = nClasses
@@ -178,24 +178,6 @@ cdef class SparseNetwork:
         return list_of_interfaces
 
 
-    #         print("""Interface {0}:
-    # grid size {1}
-    # feature size {2}
-    # nSpatialSites {3}
-    # spatialSize {4}
-    # nFeatures {5}""".format(
-    #             _i,
-    #             interfaces[_i].grids[0].mp.size(),
-    #             interfaces[_i].sub.features.size(),
-    #             interfaces[_i].nSpatialSites,
-    #             interfaces[_i].spatialSize,
-    #             interfaces[_i].nFeatures,
-    #         ))
-    #     for layer in self.layers:
-    #         print(layer)
-
-
-
 cdef char* _train = 'TRAINBATCH'
 cdef char* _test = 'TESTBATCH'
 cdef char* _unlabeled = 'UNLABELEDBATCH'
@@ -220,6 +202,10 @@ cdef class SparseDataset:
 
     def summary(self):
         self.ssd.summary()
+
+    @property
+    def nClasses(self):
+        return self.ssd.nClasses
 
     @property
     def name(self):

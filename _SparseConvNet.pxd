@@ -41,7 +41,7 @@ cdef extern from "SparseConvNet/types.h":
 
 cdef extern from "SparseConvNet/SparseConvNet.h":
     cdef cppclass SparseConvNet:
-        SparseConvNet(int dimension, int nInputFeatures, int nClasses, int pciBusID, int nTop) except +
+        SparseConvNet(int dimension, int nInputFeatures, int nClasses, int pciBusID, int nTop, int nThreads) except +
         unique_ptr[SparseConvNetCUDA] cnn
         void addLeNetLayerMP(int nFeatures, int filterSize, int filterStride,
                            int poolSize, int poolStride,

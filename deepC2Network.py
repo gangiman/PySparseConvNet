@@ -8,8 +8,8 @@ import os
 import math
 
 
-def create_DeepC2Network(dimension, l, k, fn, nInputFeatures, nClasses, p):
-    sparse_net = SparseNetwork(dimension, nInputFeatures, nClasses)
+def create_DeepC2Network(dimension, l, k, fn, nInputFeatures, nClasses, p, nThreads=1):
+    sparse_net = SparseNetwork(dimension, nInputFeatures, nClasses, nThreads=nThreads)
     for i in range(l + 1):
         sparse_net.addLeNetLayerMP(
             (i + 1) * k, 2, 1, 3 if (i < l) else 1, 2 if (i < l) else 1, fn,
@@ -43,9 +43,9 @@ def generate_modelnet_dataset(full=False, limit=-1):
     number_of_features = 1
     renderSize = 40
     if full:
-        data_folder = "/media/toshiba/shape_retrieval_datasets/ModelNet/ModelNet40/"
-    else:
         data_folder = "SparseConvNet/Data/ModelNet/"
+    else:
+        data_folder = "SparseConvNet/Data/_ModelNet/"
     class_folders = os.listdir(data_folder)
     class_folders.sort()
     number_of_classes = len(class_folders)
