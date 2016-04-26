@@ -44,7 +44,7 @@ public:
 
   SparseConvNetCUDA(int dimension, int nInputFeatures, int nClasses,
                     int pciBusID = -1, int nTop = 1,
-                    int nBatchProducerThreads = 1);
+                    int nBatchProducerThreads = 10);
   ~SparseConvNetCUDA();
   void processBatch(SpatiallySparseBatch &batch, float learningRate,
                     float momentum, std::ofstream &f, std::ofstream &g);

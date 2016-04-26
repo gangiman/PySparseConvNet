@@ -1,10 +1,7 @@
 #include "Off3DFormatPicture.h"
 #include <string>
 #include <fstream>
-#include <iostream>
-#include <sstream>
-#include <algorithm>
-#include <iterator>
+#include "geomFeatures.h"
 
 int mapToGridOFF(float coord, int inputFieldSize) {
   return std::max(
@@ -44,39 +41,33 @@ void drawTriangleOFF(SparseGrid &grid, int inputFieldSize,
           mapToGridOFF(p2, inputFieldSize);
       if (grid.mp.find(n) == grid.mp.end()) {
         grid.mp[n] = nSpatialSites++;
-        features.push_back(1); // NOTE: here we can push back vector of features
+        features.push_back(1);
       }
     }
   }
 }
 
 OffSurfaceModelPicture::OffSurfaceModelPicture(std::string filename,
-                                               int renderSize, int label)
-    : Picture(label), renderSize(renderSize) {
+                                               int renderSize, int label, std::set<FeatureKind> feature_kind)
+  : Picture(label), renderSize(renderSize), feature_kind(feature_kind) {
   picture_path = filename;
-  is_loaded = false;
+  loadPicture();
 }
 
 void OffSurfaceModelPicture::loadPicture() {
   std::ifstream file(picture_path.c_str());
   std::string off;
   getline(file, off);
-
   int nPoints, nTriangles, nLines;
 
-  // In some files the first line is concatenated with the second line like this:
-  // OFF348 256 0
-  // So, we need to parse this situation
-  if (off.compare("OFF") != 0) {
-    std::istringstream off_stream(off);
-    std::vector<std::string> words{std::istream_iterator<std::string>{off_stream},
-                                   std::istream_iterator<std::string>{}};
-    nPoints = std::stoi(words[0].substr(3));
-    nTriangles = std::stoi(words[1]);
-    nLines = std::stoi(words[2]);
+  // in some off files there is no "\n" symbol between first and second lines
+  if (off.length() > 4) {
+    std::istringstream second_line(off.substr(3));
+    second_line >> nPoints >> nTriangles >> nLines;
   } else {
     file >> nPoints >> nTriangles >> nLines;
   }
+
   points.set_size(nPoints, 3);
   surfaces.resize(nTriangles);
   for (int i = 0; i < nPoints; i++)
@@ -127,20 +118,27 @@ void OffSurfaceModelPicture::codifyInputData(SparseGrid &grid,
                                              std::vector<float> &features,
                                              int &nSpatialSites,
                                              int spatialSize) {
-  features.push_back(0); // Background feature
   grid.backgroundCol = nSpatialSites++;
-  for (int i = 0; i < surfaces.size(); ++i) {
-    // assume triangles
-    drawTriangleOFF(grid, spatialSize, features, nSpatialSites,
-                    points(surfaces[i][0], 0), points(surfaces[i][0], 1),
-                    points(surfaces[i][0], 2),
-                    points(surfaces[i][1], 0) - points(surfaces[i][0], 0),
-                    points(surfaces[i][1], 1) - points(surfaces[i][0], 1),
-                    points(surfaces[i][1], 2) - points(surfaces[i][0], 2),
-                    points(surfaces[i][2], 0) - points(surfaces[i][0], 0),
-                    points(surfaces[i][2], 1) - points(surfaces[i][0], 1),
-                    points(surfaces[i][2], 2) - points(surfaces[i][0], 2));
-  }
+
+  // if ((feature_kind.size() > 1) || (feature_kind.find(Bool) == feature_kind.end())) {
+  //   get_features_set(points, surfaces, grid, features, nSpatialSites, spatialSize, feature_kind);
+  //   std::cout << "WTF?\n";
+  // } else {
+    features.push_back(0); //background feature
+
+    for (int i = 0; i < surfaces.size(); ++i) {
+      // assume triangles
+      drawTriangleOFF(grid, spatialSize, features, nSpatialSites,
+		      points(surfaces[i][0], 0), points(surfaces[i][0], 1),
+		      points(surfaces[i][0], 2),
+		      points(surfaces[i][1], 0) - points(surfaces[i][0], 0),
+		      points(surfaces[i][1], 1) - points(surfaces[i][0], 1),
+		      points(surfaces[i][1], 2) - points(surfaces[i][0], 2),
+		      points(surfaces[i][2], 0) - points(surfaces[i][0], 0),
+		      points(surfaces[i][2], 1) - points(surfaces[i][0], 1),
+		      points(surfaces[i][2], 2) - points(surfaces[i][0], 2));
+    }
+  // }
 }
 
 Picture *OffSurfaceModelPicture::distort(RNG &rng, batchType type) {

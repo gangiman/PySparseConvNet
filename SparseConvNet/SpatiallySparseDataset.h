@@ -3,6 +3,7 @@
 #include "Rng.h"
 #include <vector>
 #include <string>
+#include <set>
 #include "types.h"
 #include "SpatiallySparseDataset.h"
 #include <glob.h>
@@ -14,8 +15,8 @@ public:
   std::string name;
   std::string header;
   std::vector<Picture *> pictures;
-  int renderSize;
   int nFeatures;
+  std::set<FeatureKind> feature_kind;
   int nClasses;
   batchType type;
   void summary();
@@ -23,7 +24,7 @@ public:
   SpatiallySparseDataset extractValidationSet(float p = 0.1);
   void subsetOfClasses(std::vector<int> activeClasses);
   SpatiallySparseDataset subset(int n);
-  SpatiallySparseDataset balancedSubset(int n);
+  SpatiallySparseDataset balancedSample(int n);
   void repeatSamples(int reps); // Make dataset seem n times bigger (i.e. for
                                 // small datasets to avoid having v. small
                                 // training epochs)

@@ -10,17 +10,35 @@ void SpatiallySparseDataset::summary() {
   std::cout << "nFeatures:       " << nFeatures << std::endl;
   std::cout << "nPictures:       " << pictures.size() << std::endl;
   std::cout << "nClasses:        " << nClasses << std::endl;
-  if (type != UNLABELEDBATCH){
-    std::vector<int> count(nClasses);
-    for (int _i=0;_i<pictures.size();_i++)
-      count[pictures[_i]->label]++;
-
-    std::cout << "nPictures/class: ";
-    for (int _i=0;_i<count.size();_i++)
-      std::cout << count[_i] << " ";
+  std::vector<int> count(nClasses);
+  for (auto pic : pictures) {
+    count[pic->label]++;
+  }
+  if (type != UNLABELEDBATCH) {
+    std::cout << "nPictures/class:";
+    for (auto i : count)
+      std::cout << " " << i;
     std::cout << std::endl;
   }
+  std::cout << "Features: ";
+  if (feature_kind.find(Bool) != feature_kind.end()) {
+    std::cout << "Bool, ";
+  }
+  if (feature_kind.find(ScalarArea) != feature_kind.end()) {
+    std::cout << "ScalarArea, ";
+  }
+  if (feature_kind.find(AreaNormal) != feature_kind.end()) {
+    std::cout << "AreaNormal, ";
+  }
+  if (feature_kind.find(Quadform) != feature_kind.end()) {
+    std::cout << "Quadform, ";
+  }
+  if (feature_kind.find(Eigenvalues) != feature_kind.end()) {
+        std::cout << "Eigenvalues, ";
+  }
+  std::cout << std::endl;
 }
+
 SpatiallySparseDataset SpatiallySparseDataset::extractValidationSet(float p) {
   SpatiallySparseDataset val;
   val.name = name + std::string(" Validation set");
@@ -37,24 +55,49 @@ SpatiallySparseDataset SpatiallySparseDataset::extractValidationSet(float p) {
   }
   return val;
 }
+void SpatiallySparseDataset::subsetOfClasses(std::vector<int> activeClasses) {
+  nClasses = activeClasses.size();
+  std::vector<Picture *> p = pictures;
+  pictures.clear();
+  for (unsigned int i = 0; i < p.size(); ++i) {
+    std::vector<int>::iterator it;
+    it = find(activeClasses.begin(), activeClasses.end(), p[i]->label);
+    if (it != activeClasses.end()) {
+      p[i]->label = it - activeClasses.begin();
+      pictures.push_back(p[i]);
+      // std::cout << pictures.size() << " " << p[i]->identify() << std::endl;
+    } else
+      delete p[i];
+  }
+}
 
-// Assume there are at least n of each class in the dataset
-SpatiallySparseDataset SpatiallySparseDataset::balancedSubset(int n) {
+// Pick n samples from each class if possible
+SpatiallySparseDataset SpatiallySparseDataset::balancedSample(int n) {
   SpatiallySparseDataset bs;
-  bs.name = name + std::string(" subset");
+  bs.name = name + std::string(" sample");
   bs.nFeatures = nFeatures;
   bs.nClasses = nClasses;
   bs.type = type;
-  auto permutation = rng.permutation(pictures.size());
   std::vector<int> count(nClasses);
   int classesDone = 0;
-  for (unsigned int i = 0; i < pictures.size() and classesDone < nClasses;
-       i++) {
-    auto pic = pictures[permutation[i]];
-    if (count[pic->label]++ < n)
-      bs.pictures.push_back(pic);
-    if (count[pic->label] == n)
-      classesDone++;
+  while (classesDone < nClasses) {
+    auto permutation = rng.permutation(pictures.size());
+    bool makingProgress = false;
+    for (unsigned int i = 0; i < pictures.size() and classesDone < nClasses;
+         i++) {
+      auto pic = pictures[permutation[i]];
+      if (count[pic->label]++ < n) {
+        bs.pictures.push_back(pic);
+        makingProgress = true;
+      }
+      if (count[pic->label] == n)
+        classesDone++;
+    }
+    if (not makingProgress) {
+      // std::cerr << "SpatiallySparseDataset::balancedSample(...) cannot find "
+      //              "examples of all classes in " << name << std::endl;
+      break;
+    }
   }
   return bs;
 }
@@ -76,6 +119,8 @@ void SpatiallySparseDataset::shuffle() {
   std::shuffle(pictures.begin(), pictures.end(), rng.gen);
 }
 void SpatiallySparseDataset::repeatSamples(int reps) {
+  std::cout << "Repeating each sample in " << name << " " << reps << " times"
+            << std::endl;
   int s = pictures.size();
   for (int i = 1; i < reps; ++i)
     for (int j = 0; j < s; ++j)

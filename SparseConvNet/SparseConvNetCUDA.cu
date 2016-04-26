@@ -199,10 +199,12 @@ void SparseConvNetCUDA::addTerminalPoolingLayer(int poolSize, int S) {
 void SparseConvNetCUDA::addSoftmaxLayer() {
   addLearntLayer(nClasses, SOFTMAX, 0.0f, 1);
   inputSpatialSize = 1;
+  std::cout << "Spatially sparse CNN with layer sizes: " << inputSpatialSize;
   for (int i = layers.size() - 1; i >= 0; i--) {
     inputSpatialSize = layers[i]->calculateInputSpatialSize(inputSpatialSize);
   }
-  std::cout << "Spatially sparse CNN: input size " << inputSpatialSize;
+  std::cout << std::endl;
+  std::cout << "Input-field dimensions = " << inputSpatialSize;
   for (int i = 1; i < dimension; ++i)
     std::cout << "x" << inputSpatialSize;
   std::cout << std::endl;
@@ -575,7 +577,8 @@ void SparseConvNetCUDA::calculateInputRegularizingConstants(
             << " out of " << dataset.pictures.size()
             << " training samples to calculate regularizing constants."
             << std::endl;
-  dataset.pictures.resize(10000);
+  if (dataset.pictures.size() > 10000)
+    dataset.pictures.resize(10000);
   dataset.type = TESTBATCH; // pretend it is a test batch to turn off dropout
                             // and training data augmentation
   BatchProducer bp(*this, dataset, inputSpatialSize, 100);
