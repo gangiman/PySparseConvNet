@@ -37,7 +37,7 @@ cdef class SparseNetwork:
     cdef int nClasses
 
     def __cinit__(self, int dimension, int nInputFeatures, int nClasses,
-                  int cudaDevice=-1, int nTop=1, int nThreads=1):
+                  int cudaDevice=-1, int nTop=1, int nThreads=10):
         """Initializing Network.
 
         dimension - number of input dimension

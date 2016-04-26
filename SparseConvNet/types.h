@@ -19,6 +19,15 @@ enum ActivationFunction {
   PRELU,
   SIGMOID
 };
+
+enum FeatureKind {
+  Bool,
+  ScalarArea,
+  AreaNormal,
+  Quadform,
+  Eigenvalues
+};
+
 #ifdef TYPES_CPP
 const char *sigmoidNames[] = {"", "ReLU", "VeryLeakyReLU", "LeakyReLU", "tanh",
                               "Softmax Classification", "PReLU", "Sigmoid"};

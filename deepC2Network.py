@@ -39,26 +39,31 @@ def load_3d_off():
     print ("done")
     return pairs
 
-def generate_modelnet_dataset(full=False, limit=-1):
+def generate_modelnet_dataset(batch_mode='TRAINBATCH'):
     number_of_features = 1
     renderSize = 40
-    if full:
-        data_folder = "SparseConvNet/Data/ModelNet/"
-    else:
-        data_folder = "SparseConvNet/Data/_ModelNet/"
+    data_folder = "/media/toshiba/shape_retrieval_datasets/ModelNet/ModelNet40/"
+
     class_folders = os.listdir(data_folder)
     class_folders.sort()
     number_of_classes = len(class_folders)
-    sparse_dataset = SparseDataset("ModelNet (Train subset)", 'TRAINBATCH',
-                                   number_of_features, number_of_classes)
+    if batch_mode == 'TRAINBATCH':
+        sparse_dataset = SparseDataset("ModelNet (Train subset)", 'TRAINBATCH',
+                                       number_of_features, number_of_classes)
+        max_n_pictures = 80
+        batch_folder = 'train'
+    else:
+        sparse_dataset = SparseDataset("ModelNet (Test subset)", 'TESTBATCH',
+                                       number_of_features, number_of_classes)
+        max_n_pictures = 20
+        batch_folder = 'test'
+
     for class_id, folder in enumerate(class_folders):
-        dirpath = os.path.join(data_folder, folder, 'train')
-        for _count, filename in enumerate(os.listdir(dirpath)):
-            if _count > limit > 0:
-                break
+        dirpath = os.path.join(data_folder, folder, batch_folder)
+        for filename in os.listdir(dirpath)[:max_n_pictures]:
             sparse_dataset.add_picture(Off3DPicture(
                 os.path.join(dirpath, filename), renderSize, label=class_id))
-    # sparse_dataset.repeatSamples(10)
+    print(sparse_dataset.summary())
     return sparse_dataset
 
 

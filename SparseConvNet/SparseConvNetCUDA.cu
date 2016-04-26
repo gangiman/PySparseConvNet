@@ -29,10 +29,6 @@ SparseConvNetCUDA::SparseConvNetCUDA(int dimension, int nInputFeatures,
       nInputFeatures(nInputFeatures), nClasses(nClasses), nTop(nTop),
       nBatchProducerThreads(nBatchProducerThreads) {
   assert(nBatchProducerThreads <= N_MAX_BATCH_PRODUCER_THREADS);
-  /* std::cout << "Sparse CNN - dimension=" << dimension
-            << " nInputFeatures=" << nInputFeatures << " nClasses=" << nClasses
-            << " nThreads=" << nBatchProducerThreads
-            << std::endl; */
   nOutputFeatures = nInputFeatures;
   // Set up a pool of SpatiallySparseBatches
   for (int c = 0; c < nBatchProducerThreads; c++) {
@@ -200,15 +196,9 @@ void SparseConvNetCUDA::addTerminalPoolingLayer(int poolSize, int S) {
 void SparseConvNetCUDA::addSoftmaxLayer() {
   addLearntLayer(nClasses, SOFTMAX, 0.0f, 1);
   inputSpatialSize = 1;
-  /* std::cout << "Spatially sparse CNN with layer sizes: " << inputSpatialSize; */
   for (int i = layers.size() - 1; i >= 0; i--) {
     inputSpatialSize = layers[i]->calculateInputSpatialSize(inputSpatialSize);
   }
-  /* std::cout << std::endl; */
-  /* std::cout << "Input-field dimensions = " << inputSpatialSize; */
-  // for (int i = 1; i < dimension; ++i)
-    /* std::cout << "x" << inputSpatialSize; */
-  /* std::cout << std::endl; */
 }
 void SparseConvNetCUDA::addIndexLearnerLayer() {
   /* std::cout << layers.size() << ":"; */
@@ -221,10 +211,6 @@ void SparseConvNetCUDA::addIndexLearnerLayer() {
   for (int i = layers.size() - 1; i >= 0; i--) {
     inputSpatialSize = layers[i]->calculateInputSpatialSize(inputSpatialSize);
   }
-  /* std::cout << "Spatially sparse CNN: input size " << inputSpatialSize; */
-  // for (int i = 1; i < dimension; ++i)
-    /* std::cout << "x" << inputSpatialSize; */
-  /* std::cout << std::endl; */
 }
 void SparseConvNetCUDA::processBatch(SpatiallySparseBatch &batch,
                                      float learningRate, float momentum,
@@ -434,7 +420,6 @@ void SparseConvNetCUDA::loadWeights(std::string baseName, int epoch,
   std::ifstream f;
   f.open(filename.c_str(), std::ios::out | std::ios::binary);
   if (f) {
-    /* std::cout << "Loading network parameters from " << filename << std::endl; */
   } else {
     std::cout << "Cannot find " << filename << std::endl;
     exit(EXIT_FAILURE);
@@ -517,15 +502,6 @@ float SparseConvNetCUDA::processIndexLearnerDataset(
   auto end = std::chrono::system_clock::now();
   auto diff =
       std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-  // if (dataset.type == TRAINBATCH)
-    /* std::cout << dataset.name << " Mistakes:" << 100 * errorRate
-              << "% NLL:" << nll << " MegaMultiplyAdds/sample:"
-              << roundf(multiplyAddCount / dataset.pictures.size() / 1000000)
-              << " time:" << diff / 1000000000L
-              << "s GigaMultiplyAdds/s:" << roundf(multiplyAddCount / diff)
-              << " rate:"
-              << roundf(dataset.pictures.size() * 1000000000.0f / diff) << "/s"
-              << std::endl; */
   return nll;
 }
 void SparseConvNetCUDA::processBatchDumpTopLevelFeaturess(
@@ -565,10 +541,6 @@ void SparseConvNetCUDA::calculateInputRegularizingConstants(
     SpatiallySparseDataset dataset) { // make copy of the dataset
   inputNormalizingConstants.resize(
       0); // Make sure input features rescaling is turned off.
-  /* std::cout << "Using " << std::min(10000, (int)dataset.pictures.size())
-            << " out of " << dataset.pictures.size()
-            << " training samples to calculate regularizing constants."
-            << std::endl; */
   if (dataset.pictures.size() > 10000)
     dataset.pictures.resize(10000);
   dataset.type = TESTBATCH; // pretend it is a test batch to turn off dropout

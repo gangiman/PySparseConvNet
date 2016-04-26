@@ -2,8 +2,9 @@
 #include "Picture.h"
 #include "Rng.h"
 #include <armadillo>
-#include <string>
 #include <vector>
+#include <string>
+#include <set>
 
 class OffSurfaceModelPicture : public Picture {
 private:
@@ -13,7 +14,9 @@ private:
 public:
   int renderSize;
   std::string picture_path;
-  OffSurfaceModelPicture(std::string filename, int renderSize, int label_ = -1);
+  std::set<FeatureKind> feature_kind;
+  bool is_loaded;
+  OffSurfaceModelPicture(std::string filename, int renderSize, int label_ = -1, std::set<FeatureKind> feature_kind={Bool});
   ~OffSurfaceModelPicture();
   void loadPicture();
   void normalize(); // Fit centrally in the cube [-scale_n/2,scale_n/2]^3

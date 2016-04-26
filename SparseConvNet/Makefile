@@ -2,10 +2,10 @@ CC=g++
 DEBUG ?= 0
 ifeq ($(DEBUG), 1)
     CFLAGS=--std=c++11 -g -fPIC
-    NVCCFLAGS=--std=c++11 -arch sm_20 -g -Xcompiler -fPIC
+    NVCCFLAGS=--std=c++11 -arch sm_52 -g -Xcompiler -fPIC
 else
     CFLAGS=--std=c++11 -O3 -fPIC
-    NVCCFLAGS=--std=c++11 -arch sm_20 -O3 -Xcompiler -fPIC
+    NVCCFLAGS=--std=c++11 -arch sm_52 -O3 -Xcompiler -fPIC
 endif
 NVCC=nvcc
 OBJ=BatchProducer.o ConvolutionalLayer.o ConvolutionalTriangularLayer.o IndexLearnerLayer.o MaxPoolingLayer.o MaxPoolingTriangularLayer.o NetworkInNetworkLayer.o NetworkInNetworkPReLULayer.o Picture.o Regions.o Rng.o SigmoidLayer.o SoftmaxClassifier.o SparseConvNet.o SparseConvNetCUDA.o SpatiallySparseBatch.o SpatiallySparseBatchInterface.o SpatiallySparseDataset.o SpatiallySparseLayer.o TerminalPoolingLayer.o types.o utilities.o vectorCUDA.o ReallyConvolutionalLayer.o vectorHash.o Off3DFormatPicture.o
