@@ -22,3 +22,7 @@ sparseNetwork.cpp
 notebooks/.ipynb_checkpoints/
 
 *.swp
+
+CMakeLists.txt
+
+old/

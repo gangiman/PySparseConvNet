@@ -26,6 +26,8 @@ from pprint import pprint
 
 
 cdef class SparseNetwork:
+    """create a network object, configure layers, threads and dimensionality of input
+    """
     cdef SparseConvNet* net
     cdef list layers
     cdef int dimension
@@ -183,6 +185,8 @@ cdef char* _test = 'TESTBATCH'
 cdef char* _unlabeled = 'UNLABELEDBATCH'
 
 cdef class SparseDataset:
+    """A collection of Off3DPicture objects, that can be repeated and augmented
+    """
     cdef SpatiallySparseDataset* ssd
     cdef string name
 
@@ -222,6 +226,8 @@ cdef class SparseDataset:
 
 
 cdef class Off3DPicture:
+    """wraps “.off” mesh objects, can voxelise them based on some parameters
+    """
     cdef OffSurfaceModelPicture* pic
     cdef SparseGrid grid
     cdef vector[float] features
@@ -233,10 +239,6 @@ cdef class Off3DPicture:
         if load:
             self.pic.loadPicture()
 
-    #def __dealloc__(self):
-    #    del self.pic
-    #     # del self.grid
-    #     # del self.features
 
     def codifyInputData(self, int spatialSize):
         if not self.pic.is_loaded:
