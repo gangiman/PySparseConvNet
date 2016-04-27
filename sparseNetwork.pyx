@@ -10,6 +10,14 @@ from _SparseConvNet cimport SpatiallySparseDataset
 from _SparseConvNet cimport activation
 from _SparseConvNet cimport pd_report
 
+from _SparseConvNet cimport Bool
+from _SparseConvNet cimport ScalarArea
+from _SparseConvNet cimport AreaNormal
+from _SparseConvNet cimport Quadform
+from _SparseConvNet cimport Eigenvalues
+
+from _SparseConvNet cimport nFeaturesPerVoxel_set
+
 from libcpp.string cimport string
 from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as inc
@@ -64,22 +72,12 @@ cdef class SparseNetwork:
                                  confusionMatrixFilename=""):
         """
         """
-        # cdef dict results = {
-        #     'rep': [],
-        #     'errorRate': [],
-        #     'nll': [],
-        #     'MegaMultiplyAdds_per_sample': [],
-        #     'time': [],
-        #     'GigaMultiplyAdds_per_s': [],
-        #     'rate': [],
-        # }
         cdef vector[pd_report] reports = \
             self.net.processDatasetRepeatTest(deref(dataset.ssd),
                                           batchSize, nReps,
                                           predictionsFilename,
                                           confusionMatrixFilename)
-        # for i in range(nReps):
-        #     results[i] = array_of_pdrt_reports[i]
+
         return reports
 
 
@@ -183,8 +181,29 @@ cdef class SparseDataset:
     cdef SpatiallySparseDataset* ssd
     cdef string name
 
-    def __cinit__(self, string name, string _type, int nFeatures, int nClasses):
+    def __cinit__(self, string name, string _type, int nClasses,
+                  bool _Bool=True,
+                  bool _ScalarArea=False,
+                  bool _AreaNormal=False,
+                  bool _Quadform=False,
+                  bool _Eigenvalues=False):
         self.ssd = new SpatiallySparseDataset()
+
+        _feature_kind = set()
+        if _Bool:
+            _feature_kind.add(Bool)
+        if _ScalarArea:
+            _feature_kind.add(ScalarArea)
+        if _AreaNormal:
+            _feature_kind.add(AreaNormal)
+        if _Quadform:
+            _feature_kind.add(Quadform)
+        if _Eigenvalues:
+            _feature_kind.add(Eigenvalues)
+        if not _feature_kind:
+            raise ValueError("Need to select at least one feature extractor!")
+
+        self.ssd.feature_kind = _feature_kind
         if _type == _train:
             self.ssd.type = TRAINBATCH
         elif _type == _test:
@@ -193,8 +212,9 @@ cdef class SparseDataset:
             self.ssd.type = UNLABELEDBATCH
         else:
             raise ValueError('Unknown type of batch!')
+
         self.ssd.name = name
-        self.ssd.nFeatures = nFeatures
+        self.ssd.nFeatures = nFeaturesPerVoxel_set(_feature_kind)
         self.ssd.nClasses = nClasses
 
     def summary(self):
@@ -215,6 +235,7 @@ cdef class SparseDataset:
         self.ssd.repeatSamples(nreps)
 
     def add_picture(self, Off3DPicture picture):
+        picture.pic.feature_kind = self.ssd.feature_kind
         self.ssd.pictures.push_back(<Picture*>picture.pic)
 
 
@@ -226,16 +247,31 @@ cdef class Off3DPicture:
     cdef vector[float] features
     cdef int nSpatialSites
 
-    def __cinit__(self, string filename, int renderSize, int label=-1, bool load=False):
+    def __cinit__(self, string filename, int renderSize, int label=-1, bool load=False,
+                  bool _Bool=True,
+                  bool _ScalarArea=False,
+                  bool _AreaNormal=False,
+                  bool _Quadform=False,
+                  bool _Eigenvalues=False):
+
+        _feature_kind = set()
+        if _Bool:
+            _feature_kind.add(Bool)
+        if _ScalarArea:
+            _feature_kind.add(ScalarArea)
+        if _AreaNormal:
+            _feature_kind.add(AreaNormal)
+        if _Quadform:
+            _feature_kind.add(Quadform)
+        if _Eigenvalues:
+            _feature_kind.add(Eigenvalues)
+        if not _feature_kind:
+            raise ValueError("Need to select at least one feature extractor!")
+
         self.nSpatialSites = 0
-        self.pic = new OffSurfaceModelPicture(filename, renderSize, label)
+        self.pic = new OffSurfaceModelPicture(filename, renderSize, label, _feature_kind)
         if load:
             self.pic.loadPicture()
-
-    #def __dealloc__(self):
-    #    del self.pic
-    #     # del self.grid
-    #     # del self.features
 
     def codifyInputData(self, int spatialSize):
         if not self.pic.is_loaded:

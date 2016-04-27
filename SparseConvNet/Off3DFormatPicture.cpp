@@ -120,10 +120,10 @@ void OffSurfaceModelPicture::codifyInputData(SparseGrid &grid,
                                              int spatialSize) {
   grid.backgroundCol = nSpatialSites++;
 
-  // if ((feature_kind.size() > 1) || (feature_kind.find(Bool) == feature_kind.end())) {
-  //   get_features_set(points, surfaces, grid, features, nSpatialSites, spatialSize, feature_kind);
-  //   std::cout << "WTF?\n";
-  // } else {
+   if ((feature_kind.size() > 1) || (feature_kind.find(Bool) == feature_kind.end())) {
+     get_features_set(points, surfaces, grid, features, nSpatialSites, spatialSize, feature_kind);
+     std::cout << "WTF?\n";
+   } else {
     features.push_back(0); //background feature
 
     for (int i = 0; i < surfaces.size(); ++i) {
@@ -138,7 +138,7 @@ void OffSurfaceModelPicture::codifyInputData(SparseGrid &grid,
 		      points(surfaces[i][2], 1) - points(surfaces[i][0], 1),
 		      points(surfaces[i][2], 2) - points(surfaces[i][0], 2));
     }
-  // }
+   }
 }
 
 Picture *OffSurfaceModelPicture::distort(RNG &rng, batchType type) {

@@ -55,6 +55,13 @@ cdef extern from "SparseConvNet/types.h":
         UNLABELEDBATCH,
         RESCALEBATCH
 
+    cdef enum FeatureKind:
+        Bool,
+        ScalarArea,
+        AreaNormal,
+        Quadform,
+        Eigenvalues
+
 
 cdef extern from "SparseConvNet/SparseConvNet.h":
     cdef cppclass SparseConvNet:
@@ -242,9 +249,11 @@ cdef extern from "SparseConvNet/Off3DFormatPicture.h":
         vector[vector[int]] surfaces # Will assume all surfaces are triangles for now
         int renderSize
         string picture_path
+        set[FeatureKind] feature_kind
         bool is_loaded
         int label # -1 for unknown
-        OffSurfaceModelPicture(string filename, int renderSize, int label_)
+        # OffSurfaceModelPicture(string filename, int renderSize, int label_)
+        OffSurfaceModelPicture(string filename, int renderSize, int label_, set[FeatureKind] feature_kind);
         void loadPicture()
         void normalize() # Fit centrally in the cube [-scale_n/2,scale_n/2]^3
         void random_rotation(RNG &rng)
@@ -262,6 +271,7 @@ cdef extern from "SparseConvNet/SpatiallySparseDataset.h":
         # RNG rng
         # string header
         vector[Picture *] pictures
+        set[FeatureKind] feature_kind
         int nFeatures
         int nClasses
         batchType type
@@ -286,4 +296,6 @@ cdef extern from "SparseConvNet/SpatiallySparseBatchInterface.h":
         int spatialSize   # spatialSize x spatialSize grid
         vector[SparseGrid] grids # batchSize vectors of maps storing info on
 
+cdef extern from "SparseConvNet/geomFeatures.h":
+    int nFeaturesPerVoxel_set(set[FeatureKind] featureSet)
 
