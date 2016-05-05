@@ -13,10 +13,9 @@
 #include <set>
 #include <ctime>
 #include "geomFeatures.h"
-#include "types.h"
 
 
-int nFeaturesPerVoxel(FeatureKind featureKind){
+int nFeaturesPerVoxel(enum FeatureKind featureKind){
     int nFeatures;
     if (featureKind == Bool) nFeatures = 1;
 	else if (featureKind == ScalarArea) nFeatures = 1;
@@ -26,7 +25,7 @@ int nFeaturesPerVoxel(FeatureKind featureKind){
     return nFeatures;
 }
 
-int nFeaturesPerVoxel_set(std::set<FeatureKind> featureSet){
+int nFeaturesPerVoxel_set(std::set<enum FeatureKind> featureSet){
     int nFeatures = 0;
     for (const auto& featureKind: featureSet) nFeatures += nFeaturesPerVoxel(featureKind);
     return nFeatures;
@@ -336,19 +335,22 @@ arma::vec computeQuadform(struct Node *nodePtr){ // sum of quadratic forms for a
 				b[d] = nodePtr->polygons[n*10*3+(k-1)*3+d]-nodePtr->polygons[n*10*3+d];
 			}
 			areaNormalVector[0] += a[1]*b[2]-b[1]*a[2];
-			areaNormalVector[1] += a[2]*b[0]-b[2]*a[0];
-			areaNormalVector[2] += a[0]*b[1]-b[0]*a[1];
+			areaNormalVector[1] += a[2] * b[0] - b[2] * a[0];
+			areaNormalVector[2] += a[0] * b[1] - b[0] * a[1];
 		}
-		doubleArea = sqrt(areaNormalVector[0]*areaNormalVector[0]+
-				areaNormalVector[1]*areaNormalVector[1]+
-				areaNormalVector[2]*areaNormalVector[2]);
-		c = 0.5/doubleArea;
-		quadformVector[0] += areaNormalVector[0]*areaNormalVector[0]*c;
-		quadformVector[1] += areaNormalVector[1]*areaNormalVector[1]*c;
-		quadformVector[2] += areaNormalVector[2]*areaNormalVector[2]*c;
-		quadformVector[3] += areaNormalVector[0]*areaNormalVector[1]*c;
-		quadformVector[4] += areaNormalVector[0]*areaNormalVector[2]*c;
-		quadformVector[5] += areaNormalVector[1]*areaNormalVector[2]*c;
+		doubleArea = sqrt(
+				areaNormalVector[0] * areaNormalVector[0]
+						+ areaNormalVector[1] * areaNormalVector[1]
+						+ areaNormalVector[2] * areaNormalVector[2]);
+		if (doubleArea > 0) {
+			c = 0.5 / doubleArea;
+			quadformVector[0] += areaNormalVector[0] * areaNormalVector[0] * c;
+			quadformVector[1] += areaNormalVector[1] * areaNormalVector[1] * c;
+			quadformVector[2] += areaNormalVector[2] * areaNormalVector[2] * c;
+			quadformVector[3] += areaNormalVector[0] * areaNormalVector[1] * c;
+			quadformVector[4] += areaNormalVector[0] * areaNormalVector[2] * c;
+			quadformVector[5] += areaNormalVector[1] * areaNormalVector[2] * c;
+		}
 	}
 	return quadformVector;
 }
@@ -374,7 +376,7 @@ void fillFeatureData_set(struct Node *rootPtr,
 					 int spatialSize,
 		             SparseGrid &grid,
 					 std::vector<float> &features,
-					 std::set<FeatureKind> featureSet){
+					 std::set<enum FeatureKind> featureSet){
 	// given binary tree, iteratively fill sparse grid data and feature data
 	// TODO: optimize: Quadform is computed twice if present along with Eigenvalues
 	if (rootPtr->level == maxlevel && rootPtr->Npoly > 0){
@@ -421,7 +423,7 @@ void get_features_set(arma::mat points,
 				  std::vector<float> &features,
 				  int &nSpatialSites,
 				  int spatialSize,
-				  std::set<FeatureKind> featureSet){
+				  std::set<enum FeatureKind> featureSet){
 	/*
 	 Input data:
 	    points, surfaces: Provided shape data (.off format)
@@ -444,11 +446,11 @@ void get_features_set(arma::mat points,
 
 	assert(points.n_cols == 3);
 
-	for (size_t i = 0; i < nFeaturesPerVoxel_set(featureSet); ++i) {
+        for (size_t i = 0; i < nFeaturesPerVoxel_set(featureSet); ++i) {
 	  features.push_back(0); // Background feature
 	}
 
-	unsigned int row;
+        unsigned int row;
 	unsigned int col;
 
 	// check shape fits in given cube
@@ -483,7 +485,7 @@ void get_features(arma::mat points,
 				  std::vector<float> &features,
 				  int &nSpatialSites,
 				  int spatialSize,
-				  FeatureKind featureKind){
+				  enum FeatureKind featureKind){
 	/*
 	 Input data:
 	    points, surfaces: Provided shape data (.off format)
@@ -504,7 +506,7 @@ void get_features(arma::mat points,
 
 	 */
 
-	std::set<FeatureKind> featureSet = {featureKind};
+	std::set<enum FeatureKind> featureSet = {featureKind};
 	get_features_set(points,
 			         surfaces,
 					 grid,
@@ -514,269 +516,3 @@ void get_features(arma::mat points,
 					 featureSet);
 
 }
-
-
-// void runTests(){
-// 	int n, k;
-//     arma::mat points0;
-// 	points0 << 0 << 0 << 0 << arma::endr
-// 		   << 0 << 0 << 1 << arma::endr
-// 		   << 0 << 1 << 0 << arma::endr
-// 		   << 1 << 0 << 0 << arma::endr
-// 		   << 0 << 1 << 1 << arma::endr;
-// 	arma::mat points = points0*5-0.1;
-
-// 	std::vector<std::vector<int>> surfaces;
-// 	std::vector<int> curSurf;
-// 	curSurf = {0, 1, 2};
-// 	surfaces.push_back(curSurf);
-// 	curSurf = {0, 2, 3};
-// 	surfaces.push_back(curSurf);
-
-// 	SparseGrid grid;
-// 	std::vector<float> features;
-// 	int nSpatialSites, nSpatialSites1;
-
-// 	int spatialSize = 12;
-// 	FeatureKind featureKind = Bool;
-// 	get_features(points,
-// 			     surfaces,
-// 				 grid,
-// 				 features,
-// 				 nSpatialSites,
-// 				 spatialSize,
-// 				 featureKind);
-
-// 	assert(nSpatialSites == (int) grid.mp.size());
-// 	assert(nSpatialSites*nFeaturesPerVoxel(featureKind) == (int) features.size());
-// 	for (n=0; n<nSpatialSites; n++)	assert(features[n] == 1.f);
-
-// 	spatialSize = 100;
-// 	get_features(points,
-// 			     surfaces,
-// 				 grid,
-// 				 features,
-// 				 nSpatialSites1,
-// 				 spatialSize,
-// 				 featureKind);
-// 	assert(nSpatialSites1 == nSpatialSites);
-
-
-// 	featureKind = ScalarArea;
-// 	get_features(points,
-// 			     surfaces,
-// 				 grid,
-// 				 features,
-// 				 nSpatialSites1,
-// 				 spatialSize,
-// 				 featureKind);
-// 	assert(nSpatialSites1 == nSpatialSites);
-// 	assert(nSpatialSites == (int) grid.mp.size());
-// 	assert(nSpatialSites*nFeaturesPerVoxel(featureKind) == (int) features.size());
-// 	for (n=0; n<nSpatialSites; n++)	assert(features[n] >= 0);
-// 	for (n=0; n<nSpatialSites; n++)	assert(features[n] <= 4);
-// 	int someValueEquals1 = 0;
-// 	for (n=0; n<nSpatialSites; n++){
-// 		if (fabs(features[n]-1) < 1e-5) someValueEquals1 = 1;
-// 	}
-// 	assert(someValueEquals1 == 1);
-// 	float totalArea = 0;
-// 	for (n=0; n<nSpatialSites; n++)	totalArea += features[n];
-// 	assert(fabs(totalArea-25) < 1e-5);
-
-
-// 	featureKind = AreaNormal;
-// 	get_features(points,
-// 			     surfaces,
-// 				 grid,
-// 				 features,
-// 				 nSpatialSites1,
-// 				 spatialSize,
-// 				 featureKind);
-// 	assert(nSpatialSites1 == nSpatialSites);
-// 	assert(nSpatialSites == (int) grid.mp.size());
-// 	assert(nSpatialSites*nFeaturesPerVoxel(featureKind) == (int) features.size());
-// 	for (n=0; n<nSpatialSites; n++)	assert(features[n] >= -2);
-// 	for (n=0; n<nSpatialSites; n++)	assert(features[n] <= 2);
-// 	totalArea = 0;
-// 	for (n=0; n<nSpatialSites*3; n++)	totalArea += fabs(features[n]);
-// 	assert(fabs(totalArea-25) < 1e-5);
-
-
-// 	featureKind = Quadform;
-// 	get_features(points,
-// 			     surfaces,
-// 				 grid,
-// 				 features,
-// 				 nSpatialSites1,
-// 				 spatialSize,
-// 				 featureKind);
-// 	assert(nSpatialSites1 == nSpatialSites);
-// 	assert(nSpatialSites == (int) grid.mp.size());
-// 	assert(nSpatialSites*nFeaturesPerVoxel(featureKind) == (int) features.size());
-// 	for (n=0; n<nSpatialSites; n++)	assert(features[n] >= -4);
-// 	for (n=0; n<nSpatialSites; n++)	assert(features[n] <= 4);
-// 	totalArea = 0;
-// 	for (n=0; n<nSpatialSites; n++)	{
-// 		assert(features[6*n] >= 0);
-// 		assert(features[6*n+1] >= 0);
-// 		assert(features[6*n+2] >= 0);
-// 		assert(features[6*n]*features[6*n+1] >= features[6*n+3]*features[6*n+3]);
-// 		totalArea += fabs(features[6*n]);
-// 		totalArea += fabs(features[6*n+1]);
-// 		totalArea += fabs(features[6*n+2]);
-// 	}
-// 	assert(fabs(totalArea-25) < 1e-5);
-
-
-// 	featureKind = Eigenvalues;
-// 	get_features(points,
-// 			     surfaces,
-// 				 grid,
-// 				 features,
-// 				 nSpatialSites1,
-// 				 spatialSize,
-// 				 featureKind);
-// 	assert(nSpatialSites1 == nSpatialSites);
-// 	assert(nSpatialSites == (int) grid.mp.size());
-// 	assert(nSpatialSites*nFeaturesPerVoxel(featureKind) == (int) features.size());
-// 	for (n=0; n<nSpatialSites; n++)	assert(features[n] >= 0);
-// 	for (n=0; n<nSpatialSites; n++)	assert(features[n] <= 2);
-// 	totalArea = 0;
-// 	for (n=0; n<nSpatialSites*3; n++)	totalArea += fabs(features[n]);
-// 	assert(fabs(totalArea-25) < 1e-5);
-
-// 	curSurf = {3, 2, 1};
-// 	surfaces.push_back(curSurf);
-// 	curSurf = {0, 3, 1};
-// 	surfaces.push_back(curSurf);
-
-
-// 	featureKind = AreaNormal;
-// 	get_features(points,
-// 			     surfaces,
-// 				 grid,
-// 				 features,
-// 				 nSpatialSites,
-// 				 spatialSize,
-// 				 featureKind);
-// 	assert(nSpatialSites == (int) grid.mp.size());
-// 	assert(nSpatialSites*nFeaturesPerVoxel(featureKind) == (int) features.size());
-// 	float normalSum[3];
-// 	for (n=0; n<3; n++) normalSum[n] = 0;
-// 	float totalAbsSum = 0;
-// 	for (n=0; n<nSpatialSites; n++)	{
-// 		for (k=0; k<3; k++){
-// 			normalSum[k] += features[3*n+k];
-// 			totalAbsSum += fabs(features[3*n+k]);
-// 		}
-// 	}
-//     for (k=0; k<3; k++)	assert(fabs(normalSum[k]) < 1e-5);
-//     assert(totalAbsSum > 50);
-
-
-// 	featureKind = ScalarArea;
-// 	get_features(points,
-// 			     surfaces,
-// 				 grid,
-// 				 features,
-// 				 nSpatialSites,
-// 				 spatialSize,
-// 				 featureKind);
-
-// 	totalArea = 0;
-// 	for (n=0; n<nSpatialSites; n++)	totalArea += features[n];
-
-
-// 	featureKind = Eigenvalues;
-// 	get_features(points,
-// 			     surfaces,
-// 				 grid,
-// 				 features,
-// 				 nSpatialSites,
-// 				 spatialSize,
-// 				 featureKind);
-
-// 	float totalAreaEig = 0;
-// 	for (n=0; n<nSpatialSites*3; n++)	totalAreaEig += features[n];
-// 	for (n=0; n<nSpatialSites*3; n++)	assert(features[n] >= -1e-5);
-// 	assert(fabs(totalAreaEig-totalArea) < 1e-5);
-
-//     // many features per voxel
-// 	std::set<FeatureKind> featureSet = {Bool, AreaNormal, Quadform, Eigenvalues};
-// 	assert(nFeaturesPerVoxel_set(featureSet) == 13);
-// 	get_features_set(points,
-// 			     surfaces,
-// 				 grid,
-// 				 features,
-// 				 nSpatialSites,
-// 				 spatialSize,
-// 				 featureSet);
-// 	assert(nSpatialSites*nFeaturesPerVoxel_set(featureSet) == (int) features.size());
-
-
-//     surfaces.clear();
-// 	curSurf = {0, 1, 2};
-// 	surfaces.push_back(curSurf);
-// 	curSurf = {1, 2, 4};
-// 	surfaces.push_back(curSurf);
-
-// 	get_features(points,
-// 			     surfaces,
-// 				 grid,
-// 				 features,
-// 				 nSpatialSites,
-// 				 spatialSize,
-// 				 featureKind);
-
-// 	assert(nSpatialSites == 36);
-
-
-// 	printf("All tests passed\n");
-
-// }
-
-// void testPerformance(){
-// 	int n;
-//     arma::mat points0;
-// 	points0 << 0 << 0 << 0 << arma::endr
-// 		   << 0 << 0 << 1 << arma::endr
-// 		   << 0 << 1 << 0 << arma::endr
-// 		   << 1 << 0 << 0 << arma::endr
-// 		   << 0 << 1 << 1 << arma::endr;
-
-// 	arma::mat points = points0*50-0.1;
-
-// 	std::vector<std::vector<int>> surfaces;
-// 	std::vector<int> curSurf;
-// 	curSurf = {0, 1, 2};
-// 	surfaces.push_back(curSurf);
-// 	curSurf = {0, 2, 3};
-// 	surfaces.push_back(curSurf);
-
-// 	SparseGrid grid;
-// 	std::vector<float> features;
-// 	int nSpatialSites;
-// 	int spatialSize = 120;
-// 	std::set<FeatureKind> featureSet = {Bool, ScalarArea, AreaNormal, Quadform, Eigenvalues};
-
-// 	std::clock_t start;
-//     double duration;
-//     start = std::clock();
-
-// 	for (n = 0; n < 100; n++) {
-// 		get_features_set(points, surfaces, grid, features, nSpatialSites,
-// 				spatialSize, featureSet);
-// 	}
-// 	duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
-// 	printf("Test performance OK; time: %f\n", duration);
-// }
-
-// int main(){
-// 	runTests();
-// }
-
-
-
-
-
