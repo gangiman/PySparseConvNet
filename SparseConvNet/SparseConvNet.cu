@@ -61,16 +61,16 @@ void SparseConvNet::addSoftmaxLayer() { cnn->addSoftmaxLayer(); }
 
 void SparseConvNet::addIndexLearnerLayer() { cnn->addIndexLearnerLayer(); }
 
-float SparseConvNet::processDataset(SpatiallySparseDataset &dataset,
+pd_report SparseConvNet::processDataset(SpatiallySparseDataset &dataset,
                                     int batchSize, float learningRate,
                                     float momentum) {
   return cnn->processDataset(dataset, batchSize, learningRate, momentum);
 }
 
-void SparseConvNet::processDatasetRepeatTest(
+std::string SparseConvNet::processDatasetRepeatTest(
     SpatiallySparseDataset &dataset, int batchSize, int nReps,
     std::string predictionsFilename, std::string confusionMatrixFilename) {
-  cnn->processDatasetRepeatTest(dataset, batchSize, nReps, predictionsFilename,
+  return cnn->processDatasetRepeatTest(dataset, batchSize, nReps, predictionsFilename,
                                 confusionMatrixFilename);
 }
 
@@ -131,7 +131,7 @@ void SparseConvTriangLeNet::addIndexLearnerLayer() {
   cnn->addIndexLearnerLayer();
 }
 
-float SparseConvTriangLeNet::processDataset(SpatiallySparseDataset &dataset,
+pd_report SparseConvTriangLeNet::processDataset(SpatiallySparseDataset &dataset,
                                             int batchSize, float learningRate,
                                             float momentum) {
   return cnn->processDataset(dataset, batchSize, learningRate, momentum);

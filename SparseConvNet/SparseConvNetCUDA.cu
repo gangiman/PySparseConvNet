@@ -6,6 +6,7 @@
 #include <chrono>
 #include <cassert>
 #include <algorithm>
+#include <sstream>
 #include "utilities.h"
 #include "SigmoidLayer.h"
 #include "NetworkInNetworkLayer.h"
@@ -199,10 +200,12 @@ void SparseConvNetCUDA::addTerminalPoolingLayer(int poolSize, int S) {
 void SparseConvNetCUDA::addSoftmaxLayer() {
   addLearntLayer(nClasses, SOFTMAX, 0.0f, 1);
   inputSpatialSize = 1;
+  std::cout << "Spatially sparse CNN with layer sizes: " << inputSpatialSize;
   for (int i = layers.size() - 1; i >= 0; i--) {
     inputSpatialSize = layers[i]->calculateInputSpatialSize(inputSpatialSize);
   }
-  std::cout << "Spatially sparse CNN: input size " << inputSpatialSize;
+  std::cout << std::endl;
+  std::cout << "Input-field dimensions = " << inputSpatialSize;
   for (int i = 1; i < dimension; ++i)
     std::cout << "x" << inputSpatialSize;
   std::cout << std::endl;
@@ -268,7 +271,7 @@ void SparseConvNetCUDA::processBatch(SpatiallySparseBatch &batch,
       g << std::endl;
     }
 }
-float SparseConvNetCUDA::processDataset(SpatiallySparseDataset &dataset,
+pd_report SparseConvNetCUDA::processDataset(SpatiallySparseDataset &dataset,
                                         int batchSize, float learningRate,
                                         float momentum) {
   assert(dataset.pictures.size() > 0);
@@ -309,16 +312,23 @@ float SparseConvNetCUDA::processDataset(SpatiallySparseDataset &dataset,
   //               << "\n";
   //   }
   // }
-  if (dataset.type != RESCALEBATCH)
-    std::cout << dataset.name << " Mistakes:" << 100.0 * errorRate
-              << "% NLL:" << nll << " MegaMultiplyAdds/sample:"
-              << roundf(multiplyAddCount / dataset.pictures.size() / 1000000)
-              << " time:" << diff / 1000000000L
-              << "s GigaMultiplyAdds/s:" << roundf(multiplyAddCount / diff)
-              << " rate:"
-              << roundf(dataset.pictures.size() * 1000000000.0f / diff) << "/s"
-              << std::endl;
-  return nll;
+  // if (dataset.type != RESCALEBATCH)
+  //   std::cout << dataset.name << " Mistakes:" << 100.0 * errorRate
+  //             << "% NLL:" << nll << " MegaMultiplyAdds/sample:"
+  //             << roundf(multiplyAddCount / dataset.pictures.size() / 1000000)
+  //             << " time:" << diff / 1000000000L
+  //             << "s GigaMultiplyAdds/s:" << roundf(multiplyAddCount / diff)
+  //             << " rate:"
+  //             << roundf(dataset.pictures.size() * 1000000000.0f / diff) << "/s"
+  //             << std::endl;
+  pd_report report;
+  report.errorRate = errorRate;
+  report.nll = nll;
+  report.MegaMultiplyAdds_per_sample = roundf(multiplyAddCount / dataset.pictures.size() / 1000000);
+  report.time = diff / 1000000000L;
+  report.GigaMultiplyAdds_per_s = roundf(multiplyAddCount / diff);
+  report.rate = roundf(dataset.pictures.size() * 1000000000.0f / diff);
+  return report;
 }
 
 std::vector<std::vector<float>> SparseConvNetCUDA::predict(
@@ -355,7 +365,7 @@ std::vector<SpatiallySparseBatchInterface> SparseConvNetCUDA::layer_activations(
   return interfaces;
 }
 
-void SparseConvNetCUDA::processDatasetRepeatTest(
+std::string SparseConvNetCUDA::processDatasetRepeatTest(
     SpatiallySparseDataset &dataset, int batchSize, int nReps,
     std::string predictionsFilename, std::string confusionMatrixFilename) {
   assert(dataset.pictures.size() > 0);
@@ -367,6 +377,9 @@ void SparseConvNetCUDA::processDatasetRepeatTest(
     votes[i].resize(dataset.nClasses);
     probs[i].resize(dataset.nClasses);
   }
+  // std::string reports = std::string();
+  // reports.resize(nReps);
+  std::stringstream buffer;
   for (int rep = 1; rep <= nReps; ++rep) {
     BatchProducer bp(*this, dataset, inputSpatialSize, batchSize);
     while (SpatiallySparseBatch *batch = bp.nextBatch()) {
@@ -421,7 +434,8 @@ void SparseConvNetCUDA::processDatasetRepeatTest(
     auto end = std::chrono::system_clock::now();
     auto diff = std::chrono::duration_cast<std::chrono::nanoseconds>(
                     end - start).count();
-    std::cout << dataset.name << " rep " << rep << "/" << nReps
+    // buffer.clear();
+    buffer << dataset.name << " rep " << rep << "/" << nReps
               << " Mistakes: " << 100.0 * errors / dataset.pictures.size()
               << "% NLL " << nll / dataset.pictures.size()
               << " MegaMultiplyAdds/sample:"
@@ -431,7 +445,9 @@ void SparseConvNetCUDA::processDatasetRepeatTest(
               << " rate:"
               << roundf(dataset.pictures.size() * 1000000000.0f / diff) << "/s"
               << std::endl;
+    // reports[rep - 1] = buffer.str();
   }
+  return buffer.str();
 }
 void SparseConvNetCUDA::loadWeights(std::string baseName, int epoch,
                                     bool momentum, int firstNlayers) {
@@ -575,7 +591,8 @@ void SparseConvNetCUDA::calculateInputRegularizingConstants(
             << " out of " << dataset.pictures.size()
             << " training samples to calculate regularizing constants."
             << std::endl;
-  dataset.pictures.resize(10000);
+  if (dataset.pictures.size() > 10000)
+    dataset.pictures.resize(10000);
   dataset.type = TESTBATCH; // pretend it is a test batch to turn off dropout
                             // and training data augmentation
   BatchProducer bp(*this, dataset, inputSpatialSize, 100);

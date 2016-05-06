@@ -14,6 +14,7 @@
 #include <memory>
 #include <string>
 #include <fstream>
+#include "SparseConvNetCUDA.h"
 
 class SparseConvNetCUDA;
 
@@ -48,9 +49,9 @@ public:
   void addTerminalPoolingLayer(int poolSize);
   void addSoftmaxLayer();
   void addIndexLearnerLayer();
-  float processDataset(SpatiallySparseDataset &dataset, int batchSize = 100,
+  pd_report processDataset(SpatiallySparseDataset &dataset, int batchSize = 100,
                        float learningRate = 0, float momentum = 0.99);
-  void processDatasetRepeatTest(SpatiallySparseDataset &dataset,
+  std::string processDatasetRepeatTest(SpatiallySparseDataset &dataset,
                                 int batchSize = 100, int nReps = 12,
                                 std::string predictionsFilename = "",
                                 std::string confusionMatrixFilename = "");
@@ -81,7 +82,7 @@ public:
   void addTerminalPoolingLayer(int poolSize);
   void addSoftmaxLayer();
   void addIndexLearnerLayer();
-  float processDataset(SpatiallySparseDataset &dataset, int batchSize = 100,
+  pd_report processDataset(SpatiallySparseDataset &dataset, int batchSize = 100,
                        float learningRate = 0, float momentum = 0.99);
   void processDatasetRepeatTest(SpatiallySparseDataset &dataset,
                                 int batchSize = 100, int nReps = 12,

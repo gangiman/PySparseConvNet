@@ -8,6 +8,7 @@ from _SparseConvNet cimport OffSurfaceModelPicture
 from _SparseConvNet cimport Picture
 from _SparseConvNet cimport SpatiallySparseDataset
 from _SparseConvNet cimport SpatiallySparseBatchInterface
+
 from libcpp.string cimport string
 from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as inc
@@ -55,17 +56,31 @@ cdef class SparseNetwork:
                        float learningRate=0, float momentum=0.99):
         """
         """
-        self.net.processDataset(deref(dataset.ssd), batchSize, learningRate, momentum)
+        return self.net.processDataset(deref(dataset.ssd), batchSize, learningRate, momentum)
 
     def processDatasetRepeatTest(self, SparseDataset dataset, batchSize=100, nReps=12,
                                  predictionsFilename="",
                                  confusionMatrixFilename=""):
         """
         """
-        self.net.processDatasetRepeatTest(deref(dataset.ssd),
+        # cdef dict results = {
+        #     'rep': [],
+        #     'errorRate': [],
+        #     'nll': [],
+        #     'MegaMultiplyAdds_per_sample': [],
+        #     'time': [],
+        #     'GigaMultiplyAdds_per_s': [],
+        #     'rate': [],
+        # }
+        cdef string reports = \
+            self.net.processDatasetRepeatTest(deref(dataset.ssd),
                                           batchSize, nReps,
                                           predictionsFilename,
                                           confusionMatrixFilename)
+
+        # for i in range(nReps):
+        #     results[i] = array_of_pdrt_reports[i]
+        return reports
 
 
     def addLeNetLayerMP(self, nFeatures, filterSize, filterStride, poolSize,
@@ -239,6 +254,10 @@ cdef class Off3DPicture:
         if load:
             self.pic.loadPicture()
 
+    #def __dealloc__(self):
+    #    del self.pic
+    #     # del self.grid
+    #     # del self.features
 
     def codifyInputData(self, int spatialSize):
         if not self.pic.is_loaded:

@@ -1,4 +1,5 @@
 from libcpp.vector cimport vector
+from libcpp.set cimport set
 from libcpp.memory cimport unique_ptr
 from libc.stdint cimport int64_t
 from libcpp.utility cimport pair
@@ -16,6 +17,13 @@ cdef extern from "SparseConvNet/SparseConvNetCUDA.h":
         vector[vector[float]] predict(SpatiallySparseDataset &dataset)
         vector[SpatiallySparseBatchInterface] layer_activations(SpatiallySparseDataset &dataset)
 
+    struct pd_report:
+        float errorRate
+        float nll
+        int MegaMultiplyAdds_per_sample
+        long time
+        int GigaMultiplyAdds_per_s
+        int rate
 
 cdef extern from "SparseConvNet/types.h":
     cdef enum ActivationFunction:
@@ -66,10 +74,10 @@ cdef extern from "SparseConvNet/SparseConvNet.h":
         void addTerminalPoolingLayer(int poolSize)
         void addSoftmaxLayer()
         void addIndexLearnerLayer()
-        float processDataset(SpatiallySparseDataset &dataset, int batchSize,
+        pd_report processDataset(SpatiallySparseDataset &dataset, int batchSize,
                            float learningRate, float momentum)
                            # PicturePreprocessing preprocessing_type)
-        void processDatasetRepeatTest(SpatiallySparseDataset &dataset,
+        string processDatasetRepeatTest(SpatiallySparseDataset &dataset,
                                     int batchSize, int nReps,
                                     string predictionsFilename,
                                     string confusionMatrixFilename)
@@ -245,7 +253,6 @@ cdef extern from "SparseConvNet/SpatiallySparseDataset.h":
         # RNG rng
         # string header
         vector[Picture *] pictures
-        int renderSize
         int nFeatures
         int nClasses
         batchType type

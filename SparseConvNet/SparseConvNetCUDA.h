@@ -22,6 +22,15 @@
 #include <iostream>
 #define N_MAX_BATCH_PRODUCER_THREADS 20
 
+struct pd_report {
+  float errorRate;
+  float nll;
+  int MegaMultiplyAdds_per_sample;
+  long time;
+  int GigaMultiplyAdds_per_s;
+  int rate;
+};
+
 class SparseConvNetCUDA {
 public:
   std::vector<SpatiallySparseLayer *> layers;
@@ -93,12 +102,12 @@ public:
   void addSoftmaxLayer();
   void addTerminalPoolingLayer(int poolSize, int S);
   void addIndexLearnerLayer();
-  float processDataset(SpatiallySparseDataset &dataset, int batchSize = 100,
+  pd_report processDataset(SpatiallySparseDataset &dataset, int batchSize = 100,
                        float learningRate = 0, float momentum = 0.99);
   std::vector<SpatiallySparseBatchInterface> layer_activations(
         SpatiallySparseDataset &dataset);
   std::vector<std::vector<float>> predict(SpatiallySparseDataset &dataset);
-  void processDatasetRepeatTest(SpatiallySparseDataset &dataset,
+  std::string processDatasetRepeatTest(SpatiallySparseDataset &dataset,
                                 int batchSize = 100, int nReps = 12,
                                 std::string predictionsFilename = "",
                                 std::string confusionMatrixFilename = "");
