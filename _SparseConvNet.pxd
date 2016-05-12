@@ -77,7 +77,7 @@ cdef extern from "SparseConvNet/SparseConvNet.h":
         pd_report processDataset(SpatiallySparseDataset &dataset, int batchSize,
                            float learningRate, float momentum)
                            # PicturePreprocessing preprocessing_type)
-        string processDatasetRepeatTest(SpatiallySparseDataset &dataset,
+        vector[pd_report] processDatasetRepeatTest(SpatiallySparseDataset &dataset,
                                     int batchSize, int nReps,
                                     string predictionsFilename,
                                     string confusionMatrixFilename)

@@ -90,13 +90,13 @@ ConvolutionalLayer::ConvolutionalLayer(cudaMemStream &memStream, int filterSize,
       nFeaturesIn(nFeaturesIn), minActiveInputs(minActiveInputs) {
   fs = ipow(filterSize, dimension);
   nFeaturesOut = fs * nFeaturesIn;
-  std::cout << "Convolution " << filterSize << "^" << dimension << "x"
-            << nFeaturesIn << "->" << nFeaturesOut;
-  if (filterStride > 1)
-    std::cout << " stride:" << filterStride;
-  if (minActiveInputs > 1)
-    std::cout << " minActiveInputs:" << minActiveInputs;
-  std::cout << std::endl;
+  // std::cout << "Convolution " << filterSize << "^" << dimension << "x"
+  //           << nFeaturesIn << "->" << nFeaturesOut;
+  // if (filterStride > 1)
+  //   std::cout << " stride:" << filterStride;
+  // if (minActiveInputs > 1)
+  //   std::cout << " minActiveInputs:" << minActiveInputs;
+  // std::cout << std::endl;
 }
 void ConvolutionalLayer::preprocess(SpatiallySparseBatch &batch,
                                     SpatiallySparseBatchInterface &input,

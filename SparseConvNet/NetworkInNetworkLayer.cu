@@ -139,8 +139,8 @@ NetworkInNetworkLayer::NetworkInNetworkLayer(
   MW.setZero();
   B.setZero();
   MB.setZero();
-  std::cout << "Learn " << nFeaturesIn << "->" << nFeaturesOut
-            << " dropout=" << dropout << " " << sigmoidNames[fn] << std::endl;
+  // std::cout << "Learn " << nFeaturesIn << "->" << nFeaturesOut
+  //           << " dropout=" << dropout << " " << sigmoidNames[fn] << std::endl;
 }
 void NetworkInNetworkLayer::preprocess(SpatiallySparseBatch &batch,
                                        SpatiallySparseBatchInterface &input,
@@ -206,7 +206,7 @@ void NetworkInNetworkLayer::scaleWeights(SpatiallySparseBatchInterface &input,
                                          bool topLayer) {
   assert(output.sub->features.size() > 0 && "call after forwards(...)");
   float scale = output.sub->features.meanAbs();
-  std::cout << "featureScale:" << scale << std::endl;
+  // std::cout << "featureScale:" << scale << std::endl;
   if (topLayer) {
     scale = 1;
   } else {

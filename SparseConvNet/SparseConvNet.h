@@ -51,7 +51,7 @@ public:
   void addIndexLearnerLayer();
   pd_report processDataset(SpatiallySparseDataset &dataset, int batchSize = 100,
                        float learningRate = 0, float momentum = 0.99);
-  std::string processDatasetRepeatTest(SpatiallySparseDataset &dataset,
+  std::vector<struct pd_report> processDatasetRepeatTest(SpatiallySparseDataset &dataset,
                                 int batchSize = 100, int nReps = 12,
                                 std::string predictionsFilename = "",
                                 std::string confusionMatrixFilename = "");

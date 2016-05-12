@@ -29,10 +29,10 @@ SparseConvNetCUDA::SparseConvNetCUDA(int dimension, int nInputFeatures,
       nInputFeatures(nInputFeatures), nClasses(nClasses), nTop(nTop),
       nBatchProducerThreads(nBatchProducerThreads) {
   assert(nBatchProducerThreads <= N_MAX_BATCH_PRODUCER_THREADS);
-  std::cout << "Sparse CNN - dimension=" << dimension
+  /* std::cout << "Sparse CNN - dimension=" << dimension
             << " nInputFeatures=" << nInputFeatures << " nClasses=" << nClasses
             << " nThreads=" << nBatchProducerThreads
-            << std::endl;
+            << std::endl; */
   nOutputFeatures = nInputFeatures;
   // Set up a pool of SpatiallySparseBatches
   for (int c = 0; c < nBatchProducerThreads; c++) {
@@ -60,7 +60,7 @@ void SparseConvNetCUDA::addLearntLayer(int nFeatures,
                   1.0f / nFeatures;
   if (dropout < 0)
     dropout = 0;
-  std::cout << layers.size() << ":";
+  /* std::cout << layers.size() << ":"; */
   if (activationFn == PRELU)
     layers.push_back(new NetworkInNetworkPReLULayer(
         memStream, cublasHandle, nOutputFeatures, nFeatures, dropout, alpha));
@@ -81,14 +81,14 @@ void SparseConvNetCUDA::addConvolutionalLayer(int nFeatures, int filterSize,
                                               int minActiveInputs,
                                               float poolingToFollow) {
   if (false and layers.size() == 0) { // Use for 0-th layer??
-    std::cout << layers.size() << ":";
+    /* std::cout << layers.size() << ":"; */
     layers.push_back(new ReallyConvolutionalLayer(
         memStream, nOutputFeatures, nFeatures, filterSize, filterStride,
         dimension, activationFn, dropout, minActiveInputs, poolingToFollow));
     nOutputFeatures = nFeatures;
   } else {
     if (filterSize > 1) {
-      std::cout << layers.size() << ":";
+      /* std::cout << layers.size() << ":"; */
       layers.push_back(
           new ConvolutionalLayer(memStream, filterSize, filterStride, dimension,
                                  nOutputFeatures, minActiveInputs));
@@ -106,7 +106,7 @@ void SparseConvNetCUDA::addLeNetLayerMP(int nFeatures, int filterSize,
   addConvolutionalLayer(nFeatures, filterSize, filterStride, activationFn,
                         dropout, minActiveInputs, poolSize);
   if (poolSize > 1) {
-    std::cout << layers.size() << ":";
+    /* std::cout << layers.size() << ":"; */
     layers.push_back(
         new MaxPoolingLayer(memStream, poolSize, poolStride, dimension));
   }
@@ -119,7 +119,7 @@ void SparseConvNetCUDA::addLeNetLayerROFMP(int nFeatures, int filterSize,
   addConvolutionalLayer(nFeatures, filterSize, filterStride, activationFn,
                         dropout, minActiveInputs, fmpShrink);
   if (fmpShrink > 1) {
-    std::cout << layers.size() << ":";
+    /* std::cout << layers.size() << ":"; */
     layers.push_back(new RandomOverlappingFractionalMaxPoolingLayer(
         memStream, poolSize, fmpShrink, dimension));
   }
@@ -132,7 +132,7 @@ void SparseConvNetCUDA::addLeNetLayerPOFMP(int nFeatures, int filterSize,
   addConvolutionalLayer(nFeatures, filterSize, filterStride, activationFn,
                         dropout, minActiveInputs, fmpShrink);
   if (fmpShrink > 1) {
-    std::cout << layers.size() << ":";
+    /* std::cout << layers.size() << ":"; */
     layers.push_back(new PseudorandomOverlappingFractionalMaxPoolingLayer(
         memStream, poolSize, fmpShrink, dimension));
   }
@@ -145,7 +145,7 @@ void SparseConvNetCUDA::addLeNetLayerRDFMP(int nFeatures, int filterSize,
   addConvolutionalLayer(nFeatures, filterSize, filterStride, activationFn,
                         dropout, minActiveInputs, fmpShrink);
   if (fmpShrink > 1) {
-    std::cout << layers.size() << ":";
+    /* std::cout << layers.size() << ":"; */
     layers.push_back(new RandomNonOverlappingFractionalMaxPoolingLayer(
         memStream, poolSize, fmpShrink, dimension));
   }
@@ -158,7 +158,7 @@ void SparseConvNetCUDA::addLeNetLayerPDFMP(int nFeatures, int filterSize,
   addConvolutionalLayer(nFeatures, filterSize, filterStride, activationFn,
                         dropout, minActiveInputs, fmpShrink);
   if (fmpShrink > 1) {
-    std::cout << layers.size() << ":";
+    /* std::cout << layers.size() << ":"; */
     layers.push_back(new PseudorandomNonOverlappingFractionalMaxPoolingLayer(
         memStream, poolSize, fmpShrink, dimension));
   }
@@ -169,7 +169,7 @@ void SparseConvNetCUDA::addTriangularConvolutionalLayer(
     ActivationFunction activationFn, float dropout, int minActiveInputs,
     float poolingToFollow) {
   if (filterSize > 1) {
-    std::cout << layers.size() << ":";
+    /* std::cout << layers.size() << ":"; */
     layers.push_back(new ConvolutionalTriangularLayer(
         memStream, filterSize, filterStride, dimension, nOutputFeatures,
         minActiveInputs));
@@ -186,45 +186,45 @@ void SparseConvNetCUDA::addTriangularLeNetLayerMP(
                                   activationFn, dropout, poolSize,
                                   minActiveInputs);
   if (poolSize > 1) {
-    std::cout << layers.size() << ":";
+    /* std::cout << layers.size() << ":"; */
     layers.push_back(new MaxPoolingTriangularLayer(memStream, poolSize,
                                                    poolStride, dimension));
   }
 }
 
 void SparseConvNetCUDA::addTerminalPoolingLayer(int poolSize, int S) {
-  std::cout << layers.size() << ":";
+  /* std::cout << layers.size() << ":"; */
   layers.push_back(new TerminalPoolingLayer(memStream, poolSize, S));
 }
 
 void SparseConvNetCUDA::addSoftmaxLayer() {
   addLearntLayer(nClasses, SOFTMAX, 0.0f, 1);
   inputSpatialSize = 1;
-  std::cout << "Spatially sparse CNN with layer sizes: " << inputSpatialSize;
+  /* std::cout << "Spatially sparse CNN with layer sizes: " << inputSpatialSize; */
   for (int i = layers.size() - 1; i >= 0; i--) {
     inputSpatialSize = layers[i]->calculateInputSpatialSize(inputSpatialSize);
   }
-  std::cout << std::endl;
-  std::cout << "Input-field dimensions = " << inputSpatialSize;
-  for (int i = 1; i < dimension; ++i)
-    std::cout << "x" << inputSpatialSize;
-  std::cout << std::endl;
+  /* std::cout << std::endl; */
+  /* std::cout << "Input-field dimensions = " << inputSpatialSize; */
+  // for (int i = 1; i < dimension; ++i)
+    /* std::cout << "x" << inputSpatialSize; */
+  /* std::cout << std::endl; */
 }
 void SparseConvNetCUDA::addIndexLearnerLayer() {
-  std::cout << layers.size() << ":";
+  /* std::cout << layers.size() << ":"; */
   layers.push_back(new IndexLearnerLayer(memStream, cublasHandle,
                                          nOutputFeatures, nClasses));
-  std::cout << "Index Learner " << nOutputFeatures << "-> " << nClasses
-            << std::endl;
+  /* std::cout << "Index Learner " << nOutputFeatures << "-> " << nClasses
+            << std::endl; */
   nOutputFeatures = nClasses; // "nClasses"=trainingSet.pictures.size()
   inputSpatialSize = 1;
   for (int i = layers.size() - 1; i >= 0; i--) {
     inputSpatialSize = layers[i]->calculateInputSpatialSize(inputSpatialSize);
   }
-  std::cout << "Spatially sparse CNN: input size " << inputSpatialSize;
-  for (int i = 1; i < dimension; ++i)
-    std::cout << "x" << inputSpatialSize;
-  std::cout << std::endl;
+  /* std::cout << "Spatially sparse CNN: input size " << inputSpatialSize; */
+  // for (int i = 1; i < dimension; ++i)
+    /* std::cout << "x" << inputSpatialSize; */
+  /* std::cout << std::endl; */
 }
 void SparseConvNetCUDA::processBatch(SpatiallySparseBatch &batch,
                                      float learningRate, float momentum,
@@ -234,9 +234,9 @@ void SparseConvNetCUDA::processBatch(SpatiallySparseBatch &batch,
     for (int i = 0; i < layers.size(); i++) {
       batch.interfaces[i + 1].sub->reset();
       layers[i]->forwards(batch, batch.interfaces[i], batch.interfaces[i + 1]);
-      std::cout << i << ":"
+      /* std::cout << i << ":"
                 << batch.interfaces[i].sub->features.size() * sizeof(float) /
-                       (1 << 20) << "MB ";
+                       (1 << 20) << "MB "; */
       layers[i]->scaleWeights(batch.interfaces[i], batch.interfaces[i + 1],
                               scalingUnderneath, i == layers.size() - 1);
     }
@@ -293,34 +293,6 @@ pd_report SparseConvNetCUDA::processDataset(SpatiallySparseDataset &dataset,
   auto diff =
       std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 
-  // for (int c = 0; c < nBatchProducerThreads; c++) {
-  //   std::cout << "Batch " << c << "\n";
-  //   std::cout << "labels " << batchPool[c].labels.size() << "\n";
-  //   for (int i = 0; i < batchPool[c].interfaces.size(); ++i) {
-  //     std::cout << i << ":" << (batchPool[c].interfaces[i].rules.size() >>
-  //     18)
-  //               << "\n";
-  //     std::cout << i << ":"
-  //               << (batchPool[c].interfaces[i].sub->features.size() >> 18)
-  //               << "\n";
-  //     std::cout << i << ":"
-  //               << (batchPool[c].interfaces[i].sub->dfeatures.size() >> 18)
-  //               << "\n";
-  //     std::cout << i << ":"
-  //               << (batchPool[c].interfaces[i].sub->poolingChoices.size() >>
-  //               18)
-  //               << "\n";
-  //   }
-  // }
-  // if (dataset.type != RESCALEBATCH)
-  //   std::cout << dataset.name << " Mistakes:" << 100.0 * errorRate
-  //             << "% NLL:" << nll << " MegaMultiplyAdds/sample:"
-  //             << roundf(multiplyAddCount / dataset.pictures.size() / 1000000)
-  //             << " time:" << diff / 1000000000L
-  //             << "s GigaMultiplyAdds/s:" << roundf(multiplyAddCount / diff)
-  //             << " rate:"
-  //             << roundf(dataset.pictures.size() * 1000000000.0f / diff) << "/s"
-  //             << std::endl;
   pd_report report;
   report.errorRate = errorRate;
   report.nll = nll;
@@ -365,7 +337,7 @@ std::vector<SpatiallySparseBatchInterface> SparseConvNetCUDA::layer_activations(
   return interfaces;
 }
 
-std::string SparseConvNetCUDA::processDatasetRepeatTest(
+std::vector<struct pd_report> SparseConvNetCUDA::processDatasetRepeatTest(
     SpatiallySparseDataset &dataset, int batchSize, int nReps,
     std::string predictionsFilename, std::string confusionMatrixFilename) {
   assert(dataset.pictures.size() > 0);
@@ -377,9 +349,7 @@ std::string SparseConvNetCUDA::processDatasetRepeatTest(
     votes[i].resize(dataset.nClasses);
     probs[i].resize(dataset.nClasses);
   }
-  // std::string reports = std::string();
-  // reports.resize(nReps);
-  std::stringstream buffer;
+  std::vector<struct pd_report> reports;
   for (int rep = 1; rep <= nReps; ++rep) {
     BatchProducer bp(*this, dataset, inputSpatialSize, batchSize);
     while (SpatiallySparseBatch *batch = bp.nextBatch()) {
@@ -404,7 +374,7 @@ std::string SparseConvNetCUDA::processDatasetRepeatTest(
     }
 
     if (!predictionsFilename.empty()) {
-      std::cout << predictionsFilename << std::endl;
+      // std::cout << predictionsFilename << std::endl;
       std::ofstream f(predictionsFilename.c_str());
       if (!dataset.header.empty())
         f << dataset.header << std::endl;
@@ -435,19 +405,15 @@ std::string SparseConvNetCUDA::processDatasetRepeatTest(
     auto diff = std::chrono::duration_cast<std::chrono::nanoseconds>(
                     end - start).count();
     // buffer.clear();
-    buffer << dataset.name << " rep " << rep << "/" << nReps
-              << " Mistakes: " << 100.0 * errors / dataset.pictures.size()
-              << "% NLL " << nll / dataset.pictures.size()
-              << " MegaMultiplyAdds/sample:"
-              << roundf(multiplyAddCount / dataset.pictures.size() / 1000000)
-              << " time:" << diff / 1000000000L
-              << "s GigaMultiplyAdds/s:" << roundf(multiplyAddCount / diff)
-              << " rate:"
-              << roundf(dataset.pictures.size() * 1000000000.0f / diff) << "/s"
-              << std::endl;
-    // reports[rep - 1] = buffer.str();
+    reports.push_back(pd_report());
+    reports[rep - 1].errorRate = 1.0 * errors / dataset.pictures.size();
+    reports[rep - 1].nll = nll / dataset.pictures.size();
+    reports[rep - 1].MegaMultiplyAdds_per_sample = roundf(multiplyAddCount / dataset.pictures.size() / 1000000);
+    reports[rep - 1].time = diff / 1000000000L;
+    reports[rep - 1].GigaMultiplyAdds_per_s = roundf(multiplyAddCount / diff);
+    reports[rep - 1].rate = roundf(dataset.pictures.size() * 1000000000.0f / diff);
   }
-  return buffer.str();
+  return reports;
 }
 void SparseConvNetCUDA::loadWeights(std::string baseName, int epoch,
                                     bool momentum, int firstNlayers) {
@@ -456,7 +422,7 @@ void SparseConvNetCUDA::loadWeights(std::string baseName, int epoch,
   std::ifstream f;
   f.open(filename.c_str(), std::ios::out | std::ios::binary);
   if (f) {
-    std::cout << "Loading network parameters from " << filename << std::endl;
+    /* std::cout << "Loading network parameters from " << filename << std::endl; */
   } else {
     std::cout << "Cannot find " << filename << std::endl;
     exit(EXIT_FAILURE);
@@ -482,7 +448,7 @@ void SparseConvNetCUDA::saveWeights(std::string baseName, int epoch,
               sizeof(float) * inputNormalizingConstants.size());
     f.close();
   } else {
-    std::cout << "Cannot write " << filename << std::endl;
+    // std::cout << "Cannot write " << filename << std::endl;
     exit(EXIT_FAILURE);
   }
 }
@@ -539,15 +505,15 @@ float SparseConvNetCUDA::processIndexLearnerDataset(
   auto end = std::chrono::system_clock::now();
   auto diff =
       std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-  if (dataset.type == TRAINBATCH)
-    std::cout << dataset.name << " Mistakes:" << 100 * errorRate
+  // if (dataset.type == TRAINBATCH)
+    /* std::cout << dataset.name << " Mistakes:" << 100 * errorRate
               << "% NLL:" << nll << " MegaMultiplyAdds/sample:"
               << roundf(multiplyAddCount / dataset.pictures.size() / 1000000)
               << " time:" << diff / 1000000000L
               << "s GigaMultiplyAdds/s:" << roundf(multiplyAddCount / diff)
               << " rate:"
               << roundf(dataset.pictures.size() * 1000000000.0f / diff) << "/s"
-              << std::endl;
+              << std::endl; */
   return nll;
 }
 void SparseConvNetCUDA::processBatchDumpTopLevelFeaturess(
@@ -587,10 +553,10 @@ void SparseConvNetCUDA::calculateInputRegularizingConstants(
     SpatiallySparseDataset dataset) { // make copy of the dataset
   inputNormalizingConstants.resize(
       0); // Make sure input features rescaling is turned off.
-  std::cout << "Using " << std::min(10000, (int)dataset.pictures.size())
+  /* std::cout << "Using " << std::min(10000, (int)dataset.pictures.size())
             << " out of " << dataset.pictures.size()
             << " training samples to calculate regularizing constants."
-            << std::endl;
+            << std::endl; */
   if (dataset.pictures.size() > 10000)
     dataset.pictures.resize(10000);
   dataset.type = TESTBATCH; // pretend it is a test batch to turn off dropout
@@ -606,7 +572,7 @@ void SparseConvNetCUDA::calculateInputRegularizingConstants(
   }
   for (int i = 0; i < nInputFeatures; ++i) {
     inputNormalizingConstants.push_back(c[i] > 0 ? 1.0f / c[i] : 0);
-    std::cout << inputNormalizingConstants.back() << " ";
+    /* std::cout << inputNormalizingConstants.back() << " "; */
   }
-  std::cout << std::endl;
+  /* std::cout << std::endl; */
 }

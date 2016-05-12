@@ -67,7 +67,7 @@ pd_report SparseConvNet::processDataset(SpatiallySparseDataset &dataset,
   return cnn->processDataset(dataset, batchSize, learningRate, momentum);
 }
 
-std::string SparseConvNet::processDatasetRepeatTest(
+std::vector<struct pd_report> SparseConvNet::processDatasetRepeatTest(
     SpatiallySparseDataset &dataset, int batchSize, int nReps,
     std::string predictionsFilename, std::string confusionMatrixFilename) {
   return cnn->processDatasetRepeatTest(dataset, batchSize, nReps, predictionsFilename,

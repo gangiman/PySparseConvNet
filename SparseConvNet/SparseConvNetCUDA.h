@@ -107,7 +107,7 @@ public:
   std::vector<SpatiallySparseBatchInterface> layer_activations(
         SpatiallySparseDataset &dataset);
   std::vector<std::vector<float>> predict(SpatiallySparseDataset &dataset);
-  std::string processDatasetRepeatTest(SpatiallySparseDataset &dataset,
+  std::vector<struct pd_report> processDatasetRepeatTest(SpatiallySparseDataset &dataset,
                                 int batchSize = 100, int nReps = 12,
                                 std::string predictionsFilename = "",
                                 std::string confusionMatrixFilename = "");

@@ -8,6 +8,7 @@ from _SparseConvNet cimport OffSurfaceModelPicture
 from _SparseConvNet cimport Picture
 from _SparseConvNet cimport SpatiallySparseDataset
 from _SparseConvNet cimport SpatiallySparseBatchInterface
+from _SparseConvNet cimport pd_report
 
 from libcpp.string cimport string
 from cython.operator cimport dereference as deref
@@ -72,12 +73,11 @@ cdef class SparseNetwork:
         #     'GigaMultiplyAdds_per_s': [],
         #     'rate': [],
         # }
-        cdef string reports = \
+        cdef vector[pd_report] reports = \
             self.net.processDatasetRepeatTest(deref(dataset.ssd),
                                           batchSize, nReps,
                                           predictionsFilename,
                                           confusionMatrixFilename)
-
         # for i in range(nReps):
         #     results[i] = array_of_pdrt_reports[i]
         return reports

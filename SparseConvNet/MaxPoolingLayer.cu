@@ -62,8 +62,8 @@ void maxPool(float *g1, float *g2, int *rules, int count, int sd, int nOut,
           (g1, g2 + processed * nOut, rules + processed * sd, nOut,
            d_choice + processed * nOut, sd);
     } else {
-      std::cout << "Do some copying and pasting in " << __FILE__ << " line "
-                << __LINE__ << " sd=" << sd << std::endl;
+      /* std::cout << "Do some copying and pasting in " << __FILE__ << " line "
+                << __LINE__ << " sd=" << sd << std::endl; */
       exit(1);
     }
     processed += batch;
@@ -99,7 +99,7 @@ MaxPoolingLayer::MaxPoolingLayer(cudaMemStream &memStream, int poolSize,
     : SpatiallySparseLayer(memStream), poolSize(poolSize),
       poolStride(poolStride), dimension(dimension) {
   sd = ipow(poolSize, dimension);
-  std::cout << "MaxPooling " << poolSize << " " << poolStride << std::endl;
+  /*  */
 }
 void MaxPoolingLayer::preprocess(SpatiallySparseBatch &batch,
                                  SpatiallySparseBatchInterface &input,
@@ -147,7 +147,7 @@ void MaxPoolingLayer::backwards(SpatiallySparseBatch &batch,
 int MaxPoolingLayer::calculateInputSpatialSize(int outputSpatialSize) {
   outSpatialSize = outputSpatialSize;
   inSpatialSize = poolSize + (outputSpatialSize - 1) * poolStride;
-  std::cout << "(" << outSpatialSize << "," << inSpatialSize << ") ";
+  /*  */
   return inSpatialSize;
 }
 
@@ -211,7 +211,7 @@ int PseudorandomOverlappingFractionalMaxPoolingLayer::calculateInputSpatialSize(
   inSpatialSize = outputSpatialSize * fmpShrink + 0.5;
   if (inSpatialSize == outputSpatialSize)
     inSpatialSize++;
-  std::cout << "(" << outSpatialSize << "," << inSpatialSize << ") ";
+  /* std::cout << "(" << outSpatialSize << "," << inSpatialSize << ") "; */
   return inSpatialSize;
 }
 
@@ -222,8 +222,8 @@ RandomOverlappingFractionalMaxPoolingLayer::
     : SpatiallySparseLayer(memStream), poolSize(poolSize), fmpShrink(fmpShrink),
       dimension(dimension) {
   sd = ipow(poolSize, dimension);
-  std::cout << "Random overlapping Fractional Max Pooling " << fmpShrink << " "
-            << poolSize << std::endl;
+  /* std::cout << "Random overlapping Fractional Max Pooling " << fmpShrink << " "
+            << poolSize << std::endl; */
 }
 void RandomOverlappingFractionalMaxPoolingLayer::preprocess(
     SpatiallySparseBatch &batch, SpatiallySparseBatchInterface &input,
@@ -274,7 +274,7 @@ int RandomOverlappingFractionalMaxPoolingLayer::calculateInputSpatialSize(
   inSpatialSize = outputSpatialSize * fmpShrink + 0.5;
   if (inSpatialSize == outputSpatialSize)
     inSpatialSize++;
-  std::cout << "(" << outSpatialSize << "," << inSpatialSize << ") ";
+  /* std::cout << "(" << outSpatialSize << "," << inSpatialSize << ") "; */
   return inSpatialSize;
 }
 
@@ -284,8 +284,8 @@ PseudorandomNonOverlappingFractionalMaxPoolingLayer::
     : SpatiallySparseLayer(memStream), poolSize(poolSize), fmpShrink(fmpShrink),
       dimension(dimension) {
   sd = ipow(poolSize, dimension);
-  std::cout << "Pseudorandom non-overlapping Fractional Max Pooling "
-            << fmpShrink << " " << poolSize << std::endl;
+  /* std::cout << "Pseudorandom non-overlapping Fractional Max Pooling "
+            << fmpShrink << " " << poolSize << std::endl; */
 }
 void PseudorandomNonOverlappingFractionalMaxPoolingLayer::preprocess(
     SpatiallySparseBatch &batch, SpatiallySparseBatchInterface &input,
@@ -336,7 +336,7 @@ int PseudorandomNonOverlappingFractionalMaxPoolingLayer::
   inSpatialSize = outputSpatialSize * fmpShrink + 0.5;
   if (inSpatialSize == outputSpatialSize)
     inSpatialSize++;
-  std::cout << "(" << outSpatialSize << "," << inSpatialSize << ") ";
+  /* std::cout << "(" << outSpatialSize << "," << inSpatialSize << ") "; */
   return inSpatialSize;
 }
 
@@ -347,8 +347,8 @@ RandomNonOverlappingFractionalMaxPoolingLayer::
     : SpatiallySparseLayer(memStream), poolSize(poolSize), fmpShrink(fmpShrink),
       dimension(dimension) {
   sd = ipow(poolSize, dimension);
-  std::cout << "Random non-overlapping Fractional Max Pooling " << fmpShrink
-            << " " << poolSize << std::endl;
+  /* std::cout << "Random non-overlapping Fractional Max Pooling " << fmpShrink
+            << " " << poolSize << std::endl; */
 }
 void RandomNonOverlappingFractionalMaxPoolingLayer::preprocess(
     SpatiallySparseBatch &batch, SpatiallySparseBatchInterface &input,
@@ -399,6 +399,6 @@ int RandomNonOverlappingFractionalMaxPoolingLayer::calculateInputSpatialSize(
   inSpatialSize = outputSpatialSize * fmpShrink + 0.5;
   if (inSpatialSize == outputSpatialSize)
     inSpatialSize++;
-  std::cout << "(" << outSpatialSize << "," << inSpatialSize << ") ";
+  /* std::cout << "(" << outSpatialSize << "," << inSpatialSize << ") "; */
   return inSpatialSize;
 }
