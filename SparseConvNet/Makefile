@@ -8,7 +8,7 @@ else
     NVCCFLAGS=--std=c++11 -arch sm_20 -O3 -Xcompiler -fPIC
 endif
 NVCC=nvcc
-OBJ=BatchProducer.o ConvolutionalLayer.o ConvolutionalTriangularLayer.o IndexLearnerLayer.o MaxPoolingLayer.o MaxPoolingTriangularLayer.o NetworkArchitectures.o NetworkInNetworkLayer.o NetworkInNetworkPReLULayer.o Picture.o Regions.o Rng.o SigmoidLayer.o SoftmaxClassifier.o SparseConvNet.o SparseConvNetCUDA.o SpatiallySparseBatch.o SpatiallySparseBatchInterface.o SpatiallySparseDataset.o SpatiallySparseLayer.o TerminalPoolingLayer.o types.o utilities.o vectorCUDA.o ReallyConvolutionalLayer.o vectorHash.o Off3DFormatPicture.o
+OBJ=BatchProducer.o ConvolutionalLayer.o ConvolutionalTriangularLayer.o IndexLearnerLayer.o MaxPoolingLayer.o MaxPoolingTriangularLayer.o NetworkInNetworkLayer.o NetworkInNetworkPReLULayer.o Picture.o Regions.o Rng.o SigmoidLayer.o SoftmaxClassifier.o SparseConvNet.o SparseConvNetCUDA.o SpatiallySparseBatch.o SpatiallySparseBatchInterface.o SpatiallySparseDataset.o SpatiallySparseLayer.o TerminalPoolingLayer.o types.o utilities.o vectorCUDA.o ReallyConvolutionalLayer.o vectorHash.o Off3DFormatPicture.o
 LIBS=-lopencv_core -lopencv_highgui -lopencv_imgproc -lcublas -larmadillo
 ifeq ($(shell uname -s),Linux)
     LIBS += -lrt
