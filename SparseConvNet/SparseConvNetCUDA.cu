@@ -324,32 +324,29 @@ std::vector<std::vector<float>> SparseConvNetCUDA::predict(
 std::vector<struct activation> SparseConvNetCUDA::layer_activations(
         SpatiallySparseDataset &dataset) {
   assert(dataset.pictures.size() == 1);
-  //std::vector<std::vector<float>> result_matrix;
   int batchSize = 1;
   std::ofstream f, g;
-  std::vector<struct activation> interfaces;
+  std::vector<struct activation> activations;
   BatchProducer bp(*this, dataset, inputSpatialSize, batchSize);
-  // std::vector<std::pair<int64_t, int>>
   while (SpatiallySparseBatch *batch = bp.nextBatch()) {
     processBatch(*batch, 0, 0, f, g);
     for (int i = 0; i < batch->interfaces.size(); ++i){
       batch->interfaces[i].sub->features.copyToCPUAsync(memStream);
       std::vector<float> &features = batch->interfaces[i].sub->features.hVector();
-      interfaces.push_back(activation());
-      interfaces[i].grid_size = batch->interfaces[i].grids[0].mp.size();
-      interfaces[i].feature_size = features.size();
-      interfaces[i].nSpatialSites = batch->interfaces[i].nSpatialSites;
-      interfaces[i].spatialSize = batch->interfaces[i].spatialSize;
-      interfaces[i].nFeatures = batch->interfaces[i].nFeatures;
-      interfaces[i].features = features;
+      activations.push_back(activation());
+      activations[i].grid_size = batch->interfaces[i].grids[0].mp.size();
+      activations[i].feature_size = features.size();
+      activations[i].nSpatialSites = batch->interfaces[i].nSpatialSites;
+      activations[i].spatialSize = batch->interfaces[i].spatialSize;
+      activations[i].nFeatures = batch->interfaces[i].nFeatures;
+      activations[i].features = features;
       for (SparseGridMap::iterator it = batch->interfaces[i].grids[0].mp.begin();
           it != batch->interfaces[i].grids[0].mp.end(); ++it) {
-        interfaces[i].sparse_grid.push_back(std::make_pair(it->first, it->second));
+        activations[i].sparse_grid.push_back(std::make_pair(it->first, it->second));
       }
-      // interfaces[i].sparse_grid = batch->interfaces[i].grids[0].mp;
     }
   }
-  return interfaces;
+  return activations;
 }
 
 std::vector<struct pd_report> SparseConvNetCUDA::processDatasetRepeatTest(

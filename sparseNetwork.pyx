@@ -171,50 +171,7 @@ cdef class SparseNetwork:
         cdef SparseDataset dataset = SparseDataset("-", 'UNLABELEDBATCH', 1, 1)
         dataset.add_picture(picture)
         interfaces = self.net.cnn.get().layer_activations(deref(dataset.ssd))
-
         return interfaces
-        # struct activation {
-        #   long grid_size;
-        #   int feature_size;
-        #   int nSpatialSites;
-        #   int spatialSize;
-        #   int nFeatures;
-        #   std::vector<float> features;
-        #   SparseGridMap sparse_grid;
-        # }
-        # cdef list list_of_interfaces = []
-        # cdef list pairs = []
-        # cdef SparseGridIter it
-        # for _i in range(interfaces.size()):
-        #     it = interfaces[_i].sparse_grid.begin()
-        #     pairs = []
-        #     while it != interfaces[_i].sparse_grid.end():
-        #         pairs.append(deref(it))
-        #         inc(it)
-        #     dict_of_activations = {
-        #         "layer": _i,
-        #         "grid_size": interfaces[_i].grid_size,
-        #         "feature_size": interfaces[_i].feature_size,
-        #         "nSpatialSites": interfaces[_i].nSpatialSites,
-        #         "spatialSize": interfaces[_i].spatialSize,
-        #         "nFeatures": interfaces[_i].nFeatures
-        #     }
-    #         dict_of_activations = {
-    #         "layer": _i,
-    #     "grid_size": interfaces[_i].grids[0].mp.size(),
-    #  "feature_size": interfaces[_i].sub.features.size(),
-    # "nSpatialSites": interfaces[_i].nSpatialSites,
-    #   "spatialSize": interfaces[_i].spatialSize,
-    #     "nFeatures": interfaces[_i].nFeatures
-    #         }
-            # pprint(dict_of_activations)
-            # dict_of_activations["sparse_grid"] = deepcopy(pairs)
-            # dict_of_activations["features"] = np.zeros(interfaces[_i].feature_size, dtype=np.float64)
-            # dict_of_activations["features"][...] = interfaces[_i].features
-            # list_of_interfaces.append(dict_of_activations)
-
-        # return list_of_interfaces
-
 
 cdef char* _train = 'TRAINBATCH'
 cdef char* _test = 'TESTBATCH'
