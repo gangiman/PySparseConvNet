@@ -31,6 +31,17 @@ struct pd_report {
   int rate;
 };
 
+struct activation {
+  long grid_size;
+  int feature_size;
+  int nSpatialSites;
+  int spatialSize;
+  int nFeatures;
+  std::vector<float> features;
+  std::vector<std::pair<int64_t, int>> sparse_grid;
+};
+
+
 class SparseConvNetCUDA {
 public:
   std::vector<SpatiallySparseLayer *> layers;
@@ -104,7 +115,7 @@ public:
   void addIndexLearnerLayer();
   pd_report processDataset(SpatiallySparseDataset &dataset, int batchSize = 100,
                        float learningRate = 0, float momentum = 0.99);
-  std::vector<SpatiallySparseBatchInterface> layer_activations(
+  std::vector<struct activation> layer_activations(
         SpatiallySparseDataset &dataset);
   std::vector<std::vector<float>> predict(SpatiallySparseDataset &dataset);
   std::vector<struct pd_report> processDatasetRepeatTest(SpatiallySparseDataset &dataset,

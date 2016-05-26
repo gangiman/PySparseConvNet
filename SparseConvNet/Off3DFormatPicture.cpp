@@ -145,11 +145,16 @@ void OffSurfaceModelPicture::codifyInputData(SparseGrid &grid,
 
 Picture *OffSurfaceModelPicture::distort(RNG &rng, batchType type) {
   OffSurfaceModelPicture *pic = new OffSurfaceModelPicture(*this);
-  pic->random_rotation(rng);
-  pic->normalize();
-  if (type == TRAINBATCH) {
-    pic->affineTransform(rng, 0.2);
-    pic->jiggle(rng, 0.2);
+  if (type != UNLABELEDBATCH)
+  {
+    pic->random_rotation(rng);
+    pic->normalize();
+    if (type == TRAINBATCH) {
+      pic->affineTransform(rng, 0.2);
+      pic->jiggle(rng, 0.2);
+    }
+  }else{
+    pic->normalize();
   }
   return pic;
 }

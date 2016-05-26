@@ -49,6 +49,20 @@ class TestTraining(unittest.TestCase):
         matrix_of_preds = network.predict(unlabeled_dataset)
         self.assertEqual(matrix_of_preds.shape, (num_of_inputs, nClasses))
 
+class TestDataExtraction(unittest.TestCase):
+
+    def test_layer_activation(self):
+        network = create_dC2()
+        network.loadWeights('SparseConvNet/weights/ModelNet_10_repeat_bs100_nthrd10/ModelNet', 200)
+        lois = [
+            network.layer_activations(
+                Off3DPicture(
+                    'SparseConvNet/Data/ModelNet/car/test/car_0216.off', 40)),
+            network.layer_activations(
+                Off3DPicture(
+                    'SparseConvNet/Data/ModelNet/sink/test/sink_0133.off', 40))
+        ]
+        self.assertEqual(len(lois[0]), 19)
 
 if __name__ == '__main__':
     unittest.main()

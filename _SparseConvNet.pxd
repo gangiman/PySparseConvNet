@@ -15,7 +15,7 @@ cdef extern from "SparseConvNet/SparseConvNetCUDA.h":
     cdef cppclass SparseConvNetCUDA:
         vector[SpatiallySparseLayer*] layers
         vector[vector[float]] predict(SpatiallySparseDataset &dataset)
-        vector[SpatiallySparseBatchInterface] layer_activations(SpatiallySparseDataset &dataset)
+        vector[activation] layer_activations(SpatiallySparseDataset &dataset)
 
     struct pd_report:
         float errorRate
@@ -24,6 +24,15 @@ cdef extern from "SparseConvNet/SparseConvNetCUDA.h":
         long time
         int GigaMultiplyAdds_per_s
         int rate
+
+    struct activation:
+        long grid_size
+        int feature_size
+        int nSpatialSites
+        int spatialSize
+        int nFeatures
+        vector[float] features
+        vector[pair[int64_t, int]] sparse_grid
 
 cdef extern from "SparseConvNet/types.h":
     cdef enum ActivationFunction:

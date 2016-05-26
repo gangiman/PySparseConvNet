@@ -5,6 +5,16 @@
 #include <cstring>
 #include <cassert>
 
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
+{
+   if (code != cudaSuccess)
+   {
+      fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+      if (abort) exit(code);
+   }
+}
+
 template <typename t>
 vectorCUDA<t>::vectorCUDA(bool onGPU, unsigned int dsize)
     : onGPU(onGPU), dsize(dsize), dAllocated(0) {
@@ -19,7 +29,7 @@ vectorCUDA<t>::vectorCUDA(bool onGPU, unsigned int dsize)
 
 template <typename t> vectorCUDA<t>::~vectorCUDA() {
   if (dAllocated > 0) {
-    cudaSafeCall(cudaFree(d_vec));
+    gpuErrchk(cudaFree(d_vec));
   }
 }
 
@@ -77,7 +87,9 @@ void vectorCUDA<t>::copyToGPUAsync(cudaMemStream &memStream) {
     }
     if (dsize > 0) {
       std::memcpy(memStream.pinnedMemory, &vec[0], sizeof(t) * dsize);
-      cudaSafeCall(cudaMemcpyAsync(d_vec, memStream.pinnedMemory,
+      // cudaSafeCall(
+      gpuErrchk(
+        cudaMemcpyAsync(d_vec, memStream.pinnedMemory,
                                    sizeof(t) * dsize, cudaMemcpyHostToDevice,
                                    memStream.stream));
       cudaStreamSynchronize(memStream.stream);

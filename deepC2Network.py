@@ -70,6 +70,6 @@ def learn_simple_network(full=False, batchSize=10, limit=1, epoch=2):
     print("Created dataset {0}".format(dataset.name))
     for epoch in xrange(1, epoch):
         learning_rate = 0.003 * math.exp(-0.05 / 2 * epoch)
-        print("epoch {0}, lr={1} ".format(epoch, learning_rate), end='')
+        # print("epoch {0}, lr={1} ".format(epoch, learning_rate), end='')
         network.processDataset(dataset, batchSize=batchSize,
                                learningRate=learning_rate)
