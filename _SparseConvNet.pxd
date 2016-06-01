@@ -44,7 +44,10 @@ cdef extern from "SparseConvNet/types.h":
         ScalarArea,
         AreaNormal,
         Quadform,
-        Eigenvalues
+        Eigenvalues,
+        QFoverSA,
+        EVoverSA,
+        AngularDefect
 
 
 cdef extern from "SparseConvNet/SparseConvNet.h":
@@ -222,8 +225,6 @@ cdef extern from "SparseConvNet/Picture.h":
         void codifyInputData(SparseGrid &grid, vector[float] &features,
                              int &nSpatialSites, int spatialSize)
         Picture *distort(RNG &rng, batchType type)
-        void loadPicture()
-        bool is_loaded
         int label # -1 for unknown
 
 
@@ -234,11 +235,9 @@ cdef extern from "SparseConvNet/Off3DFormatPicture.h":
         int renderSize
         string picture_path
         set[FeatureKind] feature_kind
-        bool is_loaded
         int label # -1 for unknown
         # OffSurfaceModelPicture(string filename, int renderSize, int label_)
         OffSurfaceModelPicture(string filename, int renderSize, int label_, set[FeatureKind] feature_kind);
-        void loadPicture()
         void normalize() # Fit centrally in the cube [-scale_n/2,scale_n/2]^3
         void random_rotation(RNG &rng)
         void jiggle(RNG &rng, float alpha)

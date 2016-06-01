@@ -14,6 +14,9 @@ from _SparseConvNet cimport ScalarArea
 from _SparseConvNet cimport AreaNormal
 from _SparseConvNet cimport Quadform
 from _SparseConvNet cimport Eigenvalues
+from _SparseConvNet cimport QFoverSA
+from _SparseConvNet cimport EVoverSA
+from _SparseConvNet cimport AngularDefect
 
 from _SparseConvNet cimport nFeaturesPerVoxel_set
 from libcpp.string cimport string
@@ -190,32 +193,35 @@ cdef char* _train = 'TRAINBATCH'
 cdef char* _test = 'TESTBATCH'
 cdef char* _unlabeled = 'UNLABELEDBATCH'
 
+def convert_feature_set(frozeset features):
+    _feature_kind = set()
+    if "Bool" in features:
+        _feature_kind.add(Bool)
+    if "ScalarArea" in features:
+        _feature_kind.add(ScalarArea)
+    if "AreaNormal" in features:
+        _feature_kind.add(AreaNormal)
+    if "Quadform" in features:
+        _feature_kind.add(Quadform)
+    if "Eigenvalues" in features:
+        _feature_kind.add(Eigenvalues)
+    if "QFoverSA" in features:
+        _feature_kind.add(QFoverSA)
+    if "EVoverSA" in features:
+        _feature_kind.add(EVoverSA)
+    if "AngularDefect" in features:
+        _feature_kind.add(AngularDefect)
+    if not _feature_kind:
+        raise ValueError("Need to select at least one feature extractor!")
+    return _feature_kind
+
 cdef class SparseDataset:
     cdef SpatiallySparseDataset* ssd
     cdef string name
 
-    def __cinit__(self, string name, string _type, int nClasses,
-                  bool _Bool=True,
-                  bool _ScalarArea=False,
-                  bool _AreaNormal=False,
-                  bool _Quadform=False,
-                  bool _Eigenvalues=False):
+    def __cinit__(self, string name, string _type, int nClasses, frozeset features={'Bool'}):
         self.ssd = new SpatiallySparseDataset()
-
-        _feature_kind = set()
-        if _Bool:
-            _feature_kind.add(Bool)
-        if _ScalarArea:
-            _feature_kind.add(ScalarArea)
-        if _AreaNormal:
-            _feature_kind.add(AreaNormal)
-        if _Quadform:
-            _feature_kind.add(Quadform)
-        if _Eigenvalues:
-            _feature_kind.add(Eigenvalues)
-        if not _feature_kind:
-            raise ValueError("Need to select at least one feature extractor!")
-
+        _feature_kind = convert_feature_set(features)
         self.ssd.feature_kind = _feature_kind
         if _type == _train:
             self.ssd.type = TRAINBATCH
@@ -258,36 +264,14 @@ cdef class Off3DPicture:
     cdef vector[float] features
     cdef int nSpatialSites
 
-    def __cinit__(self, string filename, int renderSize, int label=-1, bool load=False,
-                  bool _Bool=True,
-                  bool _ScalarArea=False,
-                  bool _AreaNormal=False,
-                  bool _Quadform=False,
-                  bool _Eigenvalues=False):
+    def __cinit__(self, string filename, int renderSize, int label=-1,frozeset features={'Bool'}):
 
-        _feature_kind = set()
-        if _Bool:
-            _feature_kind.add(Bool)
-        if _ScalarArea:
-            _feature_kind.add(ScalarArea)
-        if _AreaNormal:
-            _feature_kind.add(AreaNormal)
-        if _Quadform:
-            _feature_kind.add(Quadform)
-        if _Eigenvalues:
-            _feature_kind.add(Eigenvalues)
-        if not _feature_kind:
-            raise ValueError("Need to select at least one feature extractor!")
-
+        _feature_kind = convert_feature_set(features)
         self.nSpatialSites = 0
         self.pic = new OffSurfaceModelPicture(filename, renderSize, label, _feature_kind)
         if load:
             self.pic.loadPicture()
 
-    #def __dealloc__(self):
-    #    del self.pic
-    #     # del self.grid
-    #     # del self.features
 
     def codifyInputData(self, int spatialSize):
         if not self.pic.is_loaded:

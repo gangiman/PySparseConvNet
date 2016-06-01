@@ -10,6 +10,34 @@ void SpatiallySparseDataset::summary() {
   std::cout << "nFeatures:       " << nFeatures << std::endl;
   std::cout << "nPictures:       " << pictures.size() << std::endl;
   std::cout << "nClasses:        " << nClasses << std::endl;
+  std::cout << "Features: ";
+  if (feature_kind.find(Bool) != feature_kind.end()) {
+    std::cout << "Bool, ";
+  }
+  if (feature_kind.find(AreaNormal) != feature_kind.end()) {
+    std::cout << "AreaNormal, ";
+  }
+  if (feature_kind.find(ScalarArea) != feature_kind.end()) {
+    std::cout << "ScalarArea, ";
+  }
+  if (feature_kind.find(Quadform) != feature_kind.end()) {
+    std::cout << "Quadform, ";
+  }
+  if (feature_kind.find(Eigenvalues) != feature_kind.end()) {
+    std::cout << "Eigenvalues, ";
+  }
+  if (feature_kind.find(QFoverSA) != feature_kind.end()) {
+    std::cout << "QFoverSA, ";
+  }
+  if (feature_kind.find(EVoverSA) != feature_kind.end()) {
+    std::cout << "EVoverSA, ";
+  }
+  if (feature_kind.find(AngularDefect) != feature_kind.end()) {
+    std::cout << "AngularDefect, ";
+  }
+
+  std::cout << std::endl;
+
   std::vector<int> count(nClasses);
   for (auto pic : pictures) {
     count[pic->label]++;
@@ -20,25 +48,7 @@ void SpatiallySparseDataset::summary() {
       std::cout << " " << i;
     std::cout << std::endl;
   }
-  std::cout << "Features: ";
-  if (feature_kind.find(Bool) != feature_kind.end()) {
-    std::cout << "Bool, ";
-  }
-  if (feature_kind.find(ScalarArea) != feature_kind.end()) {
-    std::cout << "ScalarArea, ";
-  }
-  if (feature_kind.find(AreaNormal) != feature_kind.end()) {
-    std::cout << "AreaNormal, ";
-  }
-  if (feature_kind.find(Quadform) != feature_kind.end()) {
-    std::cout << "Quadform, ";
-  }
-  if (feature_kind.find(Eigenvalues) != feature_kind.end()) {
-        std::cout << "Eigenvalues, ";
-  }
-  std::cout << std::endl;
 }
-
 SpatiallySparseDataset SpatiallySparseDataset::extractValidationSet(float p) {
   SpatiallySparseDataset val;
   val.name = name + std::string(" Validation set");

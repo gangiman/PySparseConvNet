@@ -13,8 +13,6 @@
 #include <chrono>
 #include <cassert>
 
-#include <unistd.h>
-
 BatchProducer::BatchProducer(SparseConvNetCUDA &cnn,
                              SpatiallySparseDataset &dataset, int spatialSize,
                              int batchSize)
@@ -33,7 +31,6 @@ BatchProducer::BatchProducer(SparseConvNetCUDA &cnn,
       cnn.batchPool[c].interfaces.emplace_back(cnn.sharedSubInterfaces.back());
     }
   }
-
 #ifdef MULTITHREAD_BATCH_PRODUCTION
   for (int nThread = 0; nThread < cnn.nBatchProducerThreads; ++nThread)
     workers.emplace_back(&BatchProducer::batchProducerThread, this, nThread);
@@ -47,13 +44,8 @@ void BatchProducer::preprocessBatch(int c, int cc, RNG &rng) {
   cnn.batchPool[cc].interfaces[0].spatialSize = spatialSize;
   cnn.batchPool[cc].interfaces[0].featuresPresent.hVector() =
       range(dataset.nFeatures);
-  int n_pictures = dataset.pictures.size();
-  for (int i = c * batchSize; i < min((c + 1) * batchSize, n_pictures); i++) {
-    // check whether picture is already loaded
-    if (!dataset.pictures[permutation[i]]->is_loaded) {
-      dataset.pictures[permutation[i]]->loadPicture();
-    }
-
+  for (int i = c * batchSize;
+       i < min((c + 1) * batchSize, (int)(dataset.pictures.size())); i++) {
     Picture *pic = dataset.pictures[permutation[i]]->distort(rng, dataset.type);
     cnn.batchPool[cc].sampleNumbers.push_back(permutation[i]);
     cnn.batchPool[cc].batchSize++;
