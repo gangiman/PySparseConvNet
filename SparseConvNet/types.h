@@ -25,8 +25,12 @@ enum FeatureKind {
   ScalarArea,
   AreaNormal,
   Quadform,
-  Eigenvalues
+  Eigenvalues,
+  QFoverSA,
+  EVoverSA,
+  AngularDefect
 };
+
 
 #ifdef TYPES_CPP
 const char *sigmoidNames[] = {"", "ReLU", "VeryLeakyReLU", "LeakyReLU", "tanh",

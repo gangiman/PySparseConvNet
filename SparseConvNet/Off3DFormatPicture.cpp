@@ -120,23 +120,7 @@ void OffSurfaceModelPicture::codifyInputData(SparseGrid &grid,
                                              int spatialSize) {
   grid.backgroundCol = nSpatialSites++;
 
-  if ((feature_kind.size() > 1) || feature_kind.find(Bool) == feature_kind.end()) {
-    get_features_set(points, surfaces, grid, features, nSpatialSites, spatialSize, feature_kind);
-  } else {
-    features.push_back(0); //Background feature
-    for (int i = 0; i < surfaces.size(); ++i) {
-      // assume triangles
-      drawTriangleOFF(grid, spatialSize, features, nSpatialSites,
-		      points(surfaces[i][0], 0), points(surfaces[i][0], 1),
-		      points(surfaces[i][0], 2),
-		      points(surfaces[i][1], 0) - points(surfaces[i][0], 0),
-		      points(surfaces[i][1], 1) - points(surfaces[i][0], 1),
-		      points(surfaces[i][1], 2) - points(surfaces[i][0], 2),
-		      points(surfaces[i][2], 0) - points(surfaces[i][0], 0),
-		      points(surfaces[i][2], 1) - points(surfaces[i][0], 1),
-		      points(surfaces[i][2], 2) - points(surfaces[i][0], 2));
-    }
-  }
+  get_features_set(points, surfaces, grid, features, nSpatialSites, spatialSize, feature_kind);
 }
 
 Picture *OffSurfaceModelPicture::distort(RNG &rng, batchType type) {
