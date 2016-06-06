@@ -193,7 +193,7 @@ cdef char* _train = 'TRAINBATCH'
 cdef char* _test = 'TESTBATCH'
 cdef char* _unlabeled = 'UNLABELEDBATCH'
 
-def convert_feature_set(frozeset features):
+def convert_feature_set(set features):
     _feature_kind = set()
     if "Bool" in features:
         _feature_kind.add(Bool)
@@ -219,7 +219,7 @@ cdef class SparseDataset:
     cdef SpatiallySparseDataset* ssd
     cdef string name
 
-    def __cinit__(self, string name, string _type, int nClasses, frozeset features={'Bool'}):
+    def __cinit__(self, string name, string _type, int nClasses, set features={'Bool'}):
         self.ssd = new SpatiallySparseDataset()
         _feature_kind = convert_feature_set(features)
         self.ssd.feature_kind = _feature_kind
@@ -264,7 +264,7 @@ cdef class Off3DPicture:
     cdef vector[float] features
     cdef int nSpatialSites
 
-    def __cinit__(self, string filename, int renderSize, int label=-1,frozeset features={'Bool'}):
+    def __cinit__(self, string filename, int renderSize, int label=-1,set features={'Bool'}):
 
         _feature_kind = convert_feature_set(features)
         self.nSpatialSites = 0
