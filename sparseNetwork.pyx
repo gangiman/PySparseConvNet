@@ -258,12 +258,8 @@ cdef class Off3DPicture:
         _feature_kind = convert_feature_set(features)
         self.nSpatialSites = 0
         self.pic = new OffSurfaceModelPicture(filename, renderSize, label, _feature_kind)
-        if load:
-            self.pic.loadPicture()
 
     def codifyInputData(self, int spatialSize):
-        if not self.pic.is_loaded:
-            self.pic.loadPicture()
         self.pic.normalize()
         self.features.resize(0)
         self.pic.codifyInputData(self.grid, self.features,
