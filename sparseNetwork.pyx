@@ -10,6 +10,7 @@ from _SparseConvNet cimport SpatiallySparseDataset
 from _SparseConvNet cimport activation
 from _SparseConvNet cimport pd_report
 
+from _SparseConvNet cimport FeatureKind
 from _SparseConvNet cimport Bool
 from _SparseConvNet cimport ScalarArea
 from _SparseConvNet cimport AreaNormal
@@ -22,19 +23,21 @@ from _SparseConvNet cimport AngularDefect
 from _SparseConvNet cimport nFeaturesPerVoxel_set
 
 from libcpp.string cimport string
+from libcpp.set cimport set as cset
+from libcpp.vector cimport vector
+from libcpp cimport bool
+
 from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as inc
 
 from _SparseConvNet cimport SparseGrid
 from _SparseConvNet cimport SparseGridIter
-from libcpp.vector cimport vector
-from libcpp cimport bool
 
 import numpy as np
 cimport numpy as np
 
 from copy import deepcopy
-from pprint import pprint
+
 
 
 
@@ -169,7 +172,8 @@ cdef class SparseNetwork:
 
     def layer_activations(self, Off3DPicture picture):
         cdef vector[activation] interfaces
-        cdef SparseDataset dataset = SparseDataset("-", 'UNLABELEDBATCH', 1, 1)
+        cdef SparseDataset dataset = SparseDataset("-", 'UNLABELEDBATCH', 1,
+                                                   picture.feature_kind)
         dataset.add_picture(picture)
         interfaces = self.net.cnn.get().layer_activations(deref(dataset.ssd))
         return interfaces
@@ -178,25 +182,25 @@ cdef char* _train = 'TRAINBATCH'
 cdef char* _test = 'TESTBATCH'
 cdef char* _unlabeled = 'UNLABELEDBATCH'
 
-def convert_feature_set(set features):
-    _feature_kind = set()
+cdef cset[FeatureKind] convert_feature_set(set features):
+    cdef cset[FeatureKind] _feature_kind = cset[FeatureKind]()
     if "Bool" in features:
-        _feature_kind.add(Bool)
+        _feature_kind.insert(Bool)
     if "ScalarArea" in features:
-        _feature_kind.add(ScalarArea)
+        _feature_kind.insert(ScalarArea)
     if "AreaNormal" in features:
-        _feature_kind.add(AreaNormal)
+        _feature_kind.insert(AreaNormal)
     if "Quadform" in features:
-        _feature_kind.add(Quadform)
+        _feature_kind.insert(Quadform)
     if "Eigenvalues" in features:
-        _feature_kind.add(Eigenvalues)
+        _feature_kind.insert(Eigenvalues)
     if "QFoverSA" in features:
-        _feature_kind.add(QFoverSA)
+        _feature_kind.insert(QFoverSA)
     if "EVoverSA" in features:
-        _feature_kind.add(EVoverSA)
+        _feature_kind.insert(EVoverSA)
     if "AngularDefect" in features:
-        _feature_kind.add(AngularDefect)
-    if not _feature_kind:
+        _feature_kind.insert(AngularDefect)
+    if _feature_kind.empty():
         raise ValueError("Need to select at least one feature extractor!")
     return _feature_kind
 
@@ -252,21 +256,19 @@ cdef class Off3DPicture:
     cdef SparseGrid grid
     cdef vector[float] features
     cdef int nSpatialSites
+    cdef set feature_kind
 
     def __cinit__(self, string filename, int renderSize, int label=-1,set features={'Bool'}):
 
-        _feature_kind = convert_feature_set(features)
+        self.feature_kind = features
         self.nSpatialSites = 0
-        self.pic = new OffSurfaceModelPicture(filename, renderSize, label, _feature_kind)
+        self.pic = new OffSurfaceModelPicture(filename, renderSize, label, convert_feature_set(features))
 
     def codifyInputData(self, int spatialSize):
         self.pic.normalize()
         self.features.resize(0)
         self.pic.codifyInputData(self.grid, self.features,
                                  self.nSpatialSites, spatialSize)
-        print("Size of SparseGrid {0}".format(self.grid.mp.size()))
-        print("Size of features {0}".format(self.features.size()))
-        print("nSpatialSites = {0}".format(self.nSpatialSites))
         cdef list pairs = []
         cdef SparseGridIter it = self.grid.mp.begin()
         while it != self.grid.mp.end():

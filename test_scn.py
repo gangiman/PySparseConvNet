@@ -25,9 +25,9 @@ class TestHighLevelLogic(unittest.TestCase):
 
     def test_dataset_creation(self):
         with self.assertRaises(ValueError):
-            SparseDataset("Testing DataSet", "FakeBatch", 1, 2)
+            SparseDataset("Testing DataSet", "FakeBatch", 2)
         print("Successfully caught Value Exception.")
-        ds = SparseDataset("Testing DataSet", "TRAINBATCH", 1, 2)
+        ds = SparseDataset("Testing DataSet", "TRAINBATCH", 2)
         self.assertEqual(ds.name, "Testing DataSet")
 
 
@@ -37,7 +37,7 @@ class TestTraining(unittest.TestCase):
         learn_simple_network(limit=-1)
 
     def test_predict(self):
-        unlabeled_dataset = SparseDataset("One pic", 'UNLABELEDBATCH', 1, 1)
+        unlabeled_dataset = SparseDataset("One pic", 'UNLABELEDBATCH', 1)
         network = create_dC2()
         num_of_inputs = 5
         nClasses = 40
@@ -63,6 +63,7 @@ class TestDataExtraction(unittest.TestCase):
                     'SparseConvNet/Data/ModelNet/sink/test/sink_0133.off', 40))
         ]
         self.assertEqual(len(lois[0]), 19)
+        self.assertEqual(len(lois[1]), 19)
 
 if __name__ == '__main__':
     unittest.main()

@@ -148,9 +148,5 @@ void ConvolutionalLayer::backwards(SpatiallySparseBatch &batch,
 int ConvolutionalLayer::calculateInputSpatialSize(int outputSpatialSize) {
   outSpatialSize = outputSpatialSize;
   inSpatialSize = filterSize + (outputSpatialSize - 1) * filterStride;
-  std::cout << "-(C" << filterSize;
-  if (filterStride != 1)
-    std::cout << "/" << filterStride;
-  std::cout << ")-" << inSpatialSize;
   return inSpatialSize;
 }

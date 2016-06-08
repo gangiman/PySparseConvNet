@@ -40,7 +40,6 @@ def load_3d_off():
     return pairs
 
 def generate_modelnet_dataset(full=False, limit=-1):
-    number_of_features = 1
     renderSize = 40
     if full:
         data_folder = "SparseConvNet/Data/ModelNet/"
@@ -50,7 +49,7 @@ def generate_modelnet_dataset(full=False, limit=-1):
     class_folders.sort()
     number_of_classes = len(class_folders)
     sparse_dataset = SparseDataset("ModelNet (Train subset)", 'TRAINBATCH',
-                                   number_of_features, number_of_classes)
+                                   number_of_classes)
     for class_id, folder in enumerate(class_folders):
         dirpath = os.path.join(data_folder, folder, 'train')
         for _count, filename in enumerate(os.listdir(dirpath)):
