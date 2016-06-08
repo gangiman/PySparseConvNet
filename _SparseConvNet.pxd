@@ -55,6 +55,7 @@ cdef extern from "SparseConvNet/types.h":
         UNLABELEDBATCH,
         RESCALEBATCH
 
+    cdef char[] batchTypeNames
 
 cdef extern from "SparseConvNet/SparseConvNet.h":
     cdef cppclass SparseConvNet:

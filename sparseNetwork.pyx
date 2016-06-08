@@ -181,10 +181,11 @@ cdef class SparseDataset:
     """A collection of Off3DPicture objects, that can be repeated and augmented
     """
     cdef SpatiallySparseDataset* ssd
-    cdef string name
+    cdef string type
 
     def __cinit__(self, string name, string _type, int nFeatures, int nClasses):
         self.ssd = new SpatiallySparseDataset()
+        self.type = _type
         if _type == _train:
             self.ssd.type = TRAINBATCH
         elif _type == _test:
@@ -192,13 +193,24 @@ cdef class SparseDataset:
         elif _type == _unlabeled:
             self.ssd.type = UNLABELEDBATCH
         else:
-            raise ValueError('Unknown type of batch!')
+            raise ValueError("Unknown type of batch! Must be "
+                             "'TRAINBATCH' or 'TESTBATCH' or 'UNLABELEDBATCH'")
+
         self.ssd.name = name
         self.ssd.nFeatures = nFeatures
         self.ssd.nClasses = nClasses
 
     def summary(self):
-        self.ssd.summary()
+        print("Name:            {}".format(self.ssd.name))
+        print("Type:            {}".format(self.type))
+        print("nFeatures:       {}".format(self.ssd.nFeatures))
+        print("nPictures:       {}".format(self.ssd.pictures.size()))
+        print("nClasses:        {}".format(self.ssd.nClasses))
+        count = [0] * int(self.ssd.nClasses)
+        for i in range(self.ssd.pictures.size()):
+            count[self.ssd.pictures[i].label] += 1
+        if self.ssd.type != UNLABELEDBATCH:
+            print("nPictures/class: {}".format(", ".join(map(str, count))))
 
     @property
     def nClasses(self):
@@ -244,9 +256,6 @@ cdef class Off3DPicture:
         self.features.resize(0)
         self.pic.codifyInputData(self.grid, self.features,
                                  self.nSpatialSites, spatialSize)
-        print("Size of SparseGrid {0}".format(self.grid.mp.size()))
-        print("Size of features {0}".format(self.features.size()))
-        print("nSpatialSites = {0}".format(self.nSpatialSites))
         cdef list pairs = []
         cdef SparseGridIter it = self.grid.mp.begin()
         while it != self.grid.mp.end():
