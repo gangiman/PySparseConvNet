@@ -1,4 +1,6 @@
 from _SparseConvNet cimport SparseConvNet
+from _SparseConvNet cimport SpatiallySparseBatch
+from _SparseConvNet cimport BatchProducer
 from _SparseConvNet cimport VLEAKYRELU
 from _SparseConvNet cimport TRAINBATCH
 from _SparseConvNet cimport TESTBATCH
@@ -25,6 +27,32 @@ cimport numpy as np
 from copy import deepcopy
 from pprint import pprint
 
+
+cdef class SparseBatch:
+    cdef SpatiallySparseBatch* ssb
+    cdef int batchSize
+    cdef list sampleNumbers
+    cdef list labels
+
+    def __cinit__(self):
+        pass
+
+    def _construct(self):
+        self.batchSize = self.ssb.batchSize
+        self.sampleNumbers = self.ssb.sampleNumbers
+        self.labels = self.ssb.labels.hVector()[:]
+
+    def get_batchSize(self):
+        return self.batchSize
+
+    def get_sampleNumbers(self):
+        return self.sampleNumbers
+
+    def get_labels(self):
+        return self.labels
+
+    # def __dealloc__(self):
+    #     del self.ssb
 
 
 cdef class SparseNetwork:
@@ -53,33 +81,46 @@ cdef class SparseNetwork:
     def __dealloc__(self):
         del self.net
 
+    def batch_generator(self, SparseDataset dataset, batchSize):
+        spatialSize = self.net.cnn.get().computeInputSpatialSize(1)
+        cdef BatchProducer* bp = new BatchProducer(
+            deref(self.net.cnn.get()),
+            deref(dataset.ssd),
+            spatialSize,
+            batchSize)
+        cdef SpatiallySparseBatch *batch = bp.nextBatch()
+        while batch != NULL:
+            sb = SparseBatch()
+            sb.ssb = batch
+            sb._construct()
+            yield sb
+            batch = bp.nextBatch()
+
+
     def processDataset(self, SparseDataset dataset, int batchSize=100,
                        float learningRate=0, float momentum=0.99):
         """
         """
         return self.net.processDataset(deref(dataset.ssd), batchSize, learningRate, momentum)
 
+    def processBatchForward(self, SparseBatch batch):
+        return self.net.cnn.get().processBatchForward(deref(batch.ssb))
+
+    def processBatchBackward(self, SparseBatch batch, float learningRate,
+                             float momentum, dfeatures):
+        self.net.cnn.get().processBatchBackward(deref(batch.ssb),learningRate,
+                             momentum, dfeatures)
+
     def processDatasetRepeatTest(self, SparseDataset dataset, batchSize=100, nReps=12,
                                  predictionsFilename="",
                                  confusionMatrixFilename=""):
         """
         """
-        # cdef dict results = {
-        #     'rep': [],
-        #     'errorRate': [],
-        #     'nll': [],
-        #     'MegaMultiplyAdds_per_sample': [],
-        #     'time': [],
-        #     'GigaMultiplyAdds_per_s': [],
-        #     'rate': [],
-        # }
         cdef vector[pd_report] reports = \
             self.net.processDatasetRepeatTest(deref(dataset.ssd),
                                           batchSize, nReps,
                                           predictionsFilename,
                                           confusionMatrixFilename)
-        # for i in range(nReps):
-        #     results[i] = array_of_pdrt_reports[i]
         return reports
 
 

@@ -68,6 +68,10 @@ public:
   ~SparseConvNetCUDA();
   void processBatch(SpatiallySparseBatch &batch, float learningRate,
                     float momentum, std::ofstream &f, std::ofstream &g);
+  activation processBatchForward(SpatiallySparseBatch &batch);
+  void processBatchBackward(SpatiallySparseBatch &batch,
+                                     float learningRate, float momentum,
+                                     std::vector<float> dfeatures);
   void processIndexLearnerBatch(SpatiallySparseBatch &batch, float learningRate,
                                 float momentum, std::ofstream &f);
 
@@ -110,6 +114,7 @@ public:
                                  int filterStride, int poolSize, int poolStride,
                                  ActivationFunction activationFn = RELU,
                                  float dropout = 0.0f, int minActiveInputs = 1);
+  int computeInputSpatialSize(int outputSpatialSize = 1);
   void addSoftmaxLayer();
   void addTerminalPoolingLayer(int poolSize, int S);
   void addIndexLearnerLayer();

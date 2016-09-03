@@ -157,6 +157,9 @@ void NetworkInNetworkLayer::preprocess(SpatiallySparseBatch &batch,
 void NetworkInNetworkLayer::forwards(SpatiallySparseBatch &batch,
                                      SpatiallySparseBatchInterface &input,
                                      SpatiallySparseBatchInterface &output) {
+  std::cout << "NetworkInNetworkLayer::forwards - Started" << std::endl;
+  input.summary();
+  output.summary();
   output.sub->features.resize(output.nSpatialSites *
                               output.featuresPresent.size());
   if (batch.type == TRAINBATCH and
@@ -199,6 +202,7 @@ void NetworkInNetworkLayer::forwards(SpatiallySparseBatch &batch,
                       output.featuresPresent.size();
   applySigmoid(output, output, fn, memStream);
   cudaCheckError();
+  std::cout << "NetworkInNetworkLayer::forwards - Ended" << std::endl;
 }
 void NetworkInNetworkLayer::scaleWeights(SpatiallySparseBatchInterface &input,
                                          SpatiallySparseBatchInterface &output,
@@ -222,6 +226,9 @@ void NetworkInNetworkLayer::backwards(SpatiallySparseBatch &batch,
                                       SpatiallySparseBatchInterface &input,
                                       SpatiallySparseBatchInterface &output,
                                       float learningRate, float momentum) {
+  std::cout << "NetworkInNetworkLayer::backwards - Started" << std::endl;
+  input.summary();
+  output.summary();
   applySigmoidBackProp(output, output, fn, memStream);
   dw.resize(input.featuresPresent.size() * output.featuresPresent.size());
   db.resize(output.featuresPresent.size());
@@ -286,6 +293,7 @@ void NetworkInNetworkLayer::backwards(SpatiallySparseBatch &batch,
         (db.dPtr(), MB.dPtr(), B.dPtr(), nFeaturesOut, learningRate, momentum);
     cudaCheckError();
   }
+  std::cout << "NetworkInNetworkLayer::backwards - Ended" << std::endl;
 }
 void NetworkInNetworkLayer::loadWeightsFromStream(std::ifstream &f,
                                                   bool momentum) {

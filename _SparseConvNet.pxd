@@ -14,8 +14,13 @@ cdef extern from "SparseConvNet/SpatiallySparseLayer.h":
 cdef extern from "SparseConvNet/SparseConvNetCUDA.h":
     cdef cppclass SparseConvNetCUDA:
         vector[SpatiallySparseLayer*] layers
+        int computeInputSpatialSize(int outputSpatialSize)
         vector[vector[float]] predict(SpatiallySparseDataset &dataset)
         vector[activation] layer_activations(SpatiallySparseDataset &dataset)
+        activation processBatchForward(SpatiallySparseBatch &batch)
+        void processBatchBackward(SpatiallySparseBatch &batch,
+                                     float learningRate, float momentum,
+                                     vector[float] dfeatures)
 
     struct pd_report:
         float errorRate
@@ -33,6 +38,7 @@ cdef extern from "SparseConvNet/SparseConvNetCUDA.h":
         int nFeatures
         vector[float] features
         vector[pair[int64_t, int]] sparse_grid
+
 
 cdef extern from "SparseConvNet/types.h":
     cdef enum ActivationFunction:
@@ -288,3 +294,27 @@ cdef extern from "SparseConvNet/SpatiallySparseBatchInterface.h":
         vector[SparseGrid] grids # batchSize vectors of maps storing info on
 
 
+cdef extern from "SparseConvNet/SpatiallySparseBatch.h":
+    cdef cppclass SpatiallySparseBatch:
+        SpatiallySparseBatch(SpatiallySparseBatchSubInterface *inputSub)
+        batchType type
+        int batchSize
+        vector[int] sampleNumbers
+        vectorCUDA[int] labels
+        void reset()
+
+
+cdef extern from "SparseConvNet/BatchProducer.h":
+    cdef cppclass BatchProducer:
+        BatchProducer(SparseConvNetCUDA &cnn, SpatiallySparseDataset &dataset,
+                    int spatialSize, int batchSize)
+        SparseConvNetCUDA &cnn
+        int batchCounter
+        int nBatches
+        SpatiallySparseDataset &dataset
+        int batchSize
+        int spatialSize
+        vector[int] permutation
+        SpatiallySparseBatch *nextBatch()
+        void batchProducerThread(int nThread)
+        void preprocessBatch(int c, int cc, RNG &rng)

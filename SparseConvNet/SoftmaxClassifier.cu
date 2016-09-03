@@ -17,6 +17,7 @@ void SoftmaxClassifier(SpatiallySparseBatchInterface &input,
                        SpatiallySparseBatch &batch, int nTop,
                        cudaMemStream &memStream) {
   // Assume no dropout in the output layer! nClasses:=input.nFeatures.
+  std::cout << "SparseConvNetCUDA::processBatch - Started SoftmaxClassifier" << std::endl;
   assert(batch.batchSize == input.nSpatialSites);
   assert(input.nFeatures == input.featuresPresent.size());
 
@@ -55,4 +56,5 @@ void SoftmaxClassifier(SpatiallySparseBatchInterface &input,
   // std::cout << (int)batch.negativeLogLikelihood << " " << std::flush;
   input.sub->features.copyToGPUAsync(memStream);
   cudaCheckError();
+  std::cout << "SparseConvNetCUDA::processBatch - Ended SoftmaxClassifier" << std::endl;
 }

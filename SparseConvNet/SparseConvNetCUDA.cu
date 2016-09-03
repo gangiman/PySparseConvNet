@@ -197,6 +197,14 @@ void SparseConvNetCUDA::addTerminalPoolingLayer(int poolSize, int S) {
   layers.push_back(new TerminalPoolingLayer(memStream, poolSize, S));
 }
 
+int SparseConvNetCUDA::computeInputSpatialSize(int outputSpatialSize) {
+  inputSpatialSize = outputSpatialSize;
+  for (int i = layers.size() - 1; i >= 0; i--) {
+    inputSpatialSize = layers[i]->calculateInputSpatialSize(inputSpatialSize);
+  }
+  return inputSpatialSize;
+};
+
 void SparseConvNetCUDA::addSoftmaxLayer() {
   addLearntLayer(nClasses, SOFTMAX, 0.0f, 1);
   inputSpatialSize = 1;
@@ -271,6 +279,54 @@ void SparseConvNetCUDA::processBatch(SpatiallySparseBatch &batch,
       g << std::endl;
     }
 }
+
+activation SparseConvNetCUDA::processBatchForward(SpatiallySparseBatch &batch) {
+    for (int i = 0; i < layers.size(); i++) {
+      batch.interfaces[i + 1].sub->reset();
+      layers[i]->forwards(batch, batch.interfaces[i], batch.interfaces[i + 1]);
+    }
+
+    SpatiallySparseBatchInterface last_layer_batch_inteface = batch.interfaces.back();
+    last_layer_batch_inteface.sub->features.copyToCPUAsync(memStream);
+    std::vector<float> &features = last_layer_batch_inteface.sub->features.hVector();
+      struct activation last_layer_activation = activation();
+      last_layer_activation.grid_size = last_layer_batch_inteface.grids[0].mp.size();
+      last_layer_activation.feature_size = features.size();
+      last_layer_activation.nSpatialSites = last_layer_batch_inteface.nSpatialSites;
+      last_layer_activation.spatialSize = last_layer_batch_inteface.spatialSize;
+      last_layer_activation.nFeatures = last_layer_batch_inteface.nFeatures;
+      last_layer_activation.features = features;
+      for (SparseGridMap::iterator it = last_layer_batch_inteface.grids[0].mp.begin();
+          it != last_layer_batch_inteface.grids[0].mp.end(); ++it) {
+        last_layer_activation.sparse_grid.push_back(std::make_pair(it->first, it->second));
+      }
+    return last_layer_activation;
+}
+
+void SparseConvNetCUDA::processBatchBackward(SpatiallySparseBatch &batch,
+                                     float learningRate, float momentum,
+                                     std::vector<float> dfeatures) {
+
+  SpatiallySparseBatchInterface &input = batch.interfaces.back();
+
+  assert(batch.type == TRAINBATCH);
+  assert(batch.batchSize == input.nSpatialSites);
+  assert(input.nFeatures == input.featuresPresent.size());
+
+  input.sub->dfeatures.resize(input.nSpatialSites *
+                                input.featuresPresent.size());
+
+  input.sub->dfeatures.hVector() = dfeatures;
+
+  input.sub->features.copyToGPUAsync(memStream);
+  cudaCheckError();
+
+  for (int i = layers.size() - 1; i >= 0; i--) {
+    layers[i]->backwards(batch, batch.interfaces[i], batch.interfaces[i + 1],
+                         learningRate, momentum);
+  }
+}
+
 pd_report SparseConvNetCUDA::processDataset(SpatiallySparseDataset &dataset,
                                         int batchSize, float learningRate,
                                         float momentum) {

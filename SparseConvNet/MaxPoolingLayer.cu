@@ -120,6 +120,9 @@ void MaxPoolingLayer::preprocess(SpatiallySparseBatch &batch,
 void MaxPoolingLayer::forwards(SpatiallySparseBatch &batch,
                                SpatiallySparseBatchInterface &input,
                                SpatiallySparseBatchInterface &output) {
+  std::cout << "MaxPoolingLayer::forwards - Started" << std::endl;
+  input.summary();
+  output.summary();
   output.sub->poolingChoices.resize(output.nSpatialSites *
                                     output.featuresPresent.size());
   output.sub->features.resize(output.nSpatialSites *
@@ -130,11 +133,15 @@ void MaxPoolingLayer::forwards(SpatiallySparseBatch &batch,
           output.featuresPresent.size(), output.sub->poolingChoices.dPtr(),
           memStream);
   cudaCheckError();
+  std::cout << "MaxPoolingLayer::forwards - Ended" << std::endl;
 }
 void MaxPoolingLayer::backwards(SpatiallySparseBatch &batch,
                                 SpatiallySparseBatchInterface &input,
                                 SpatiallySparseBatchInterface &output,
                                 float learningRate, float momentum) {
+  std::cout << "MaxPoolingLayer::backwards - Started" << std::endl;
+  input.summary();
+  output.summary();
   if (input.backpropErrors) {
     input.sub->dfeatures.resize(input.nSpatialSites *
                                 input.featuresPresent.size());
@@ -143,6 +150,7 @@ void MaxPoolingLayer::backwards(SpatiallySparseBatch &batch,
                     output.nSpatialSites, output.featuresPresent.size(),
                     output.sub->poolingChoices.dPtr(), memStream);
   }
+  std::cout << "MaxPoolingLayer::backwards - Ended" << std::endl;
 }
 int MaxPoolingLayer::calculateInputSpatialSize(int outputSpatialSize) {
   outSpatialSize = outputSpatialSize;

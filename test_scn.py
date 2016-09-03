@@ -1,5 +1,6 @@
 from __future__ import print_function
 import unittest
+import sys
 
 from PySparseConvNet import SparseNetwork
 from PySparseConvNet import SparseDataset
@@ -49,6 +50,46 @@ class TestTraining(unittest.TestCase):
         matrix_of_preds = network.predict(unlabeled_dataset)
         self.assertEqual(matrix_of_preds.shape, (num_of_inputs, nClasses))
 
+    def test_forward_backward_pass(self):
+        import numpy as np
+        batchSize = 10
+        nInputFeatures = 1
+        nClasses = 40
+        p = 0.0
+        dimension = 3
+        l = 5
+        k = 32
+        fn = 'VLEAKYRELU'
+        network = SparseNetwork(dimension, nInputFeatures, nClasses)
+        for i in range(l + 1):
+            network.addLeNetLayerMP(
+                (i + 1) * k, 2, 1, 3 if (i < l) else 1, 2 if (i < l) else 1, fn,
+                p * i * 1.0 / l)
+
+        print("Created network")
+
+        from deepC2Network import generate_modelnet_dataset
+
+        dataset = generate_modelnet_dataset(full=False, limit=10)
+
+        dataset.summary()
+
+        learning_rate, momentum = 0.003, 0.99
+
+        for _bid, batch in enumerate(network.batch_generator(dataset, batchSize)):
+            print("Processing batch {}".format(_bid))
+            activation = network.processBatchForward(batch)
+            print("Forward pass Done!")
+            delta_features = [
+                ta if np.random.random() > .1 else ra
+                for ta, ra in zip(activation['features'],
+                                  np.random.randn(len(activation['features'])))
+            ]
+            network.processBatchBackward(
+                batch, learning_rate, momentum, delta_features)
+            print("Backward pass Done!")
+
+
 class TestDataExtraction(unittest.TestCase):
 
     def test_layer_activation(self):
@@ -65,4 +106,16 @@ class TestDataExtraction(unittest.TestCase):
         self.assertEqual(len(lois[0]), 19)
 
 if __name__ == '__main__':
-    unittest.main()
+    if len(sys.argv) < 2:
+        unittest.main()
+    else:
+        if sys.argv[1] == '0':
+            suite = unittest.TestSuite()
+            suite.addTest(TestTraining("test_simple_training"))
+        elif sys.argv[1] == '1':
+            suite = unittest.TestSuite()
+            suite.addTest(TestTraining("test_forward_backward_pass"))
+        else:
+            exit()
+    runner = unittest.TextTestRunner()
+    runner.run(suite)

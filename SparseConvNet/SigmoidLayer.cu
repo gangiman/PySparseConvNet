@@ -285,17 +285,25 @@ void SigmoidLayer::forwards(SpatiallySparseBatch &batch,
                             SpatiallySparseBatchInterface &output) {
   output.sub->features.resize(output.nSpatialSites *
                               output.featuresPresent.size());
+  std::cout << "SigmoidLayer::forwards - Started" << std::endl;
+  input.summary();
+  output.summary();
   applySigmoid(input, output, fn, memStream);
+  std::cout << "SigmoidLayer::forwards - Ended" << std::endl;
 }
 void SigmoidLayer::backwards(SpatiallySparseBatch &batch,
                              SpatiallySparseBatchInterface &input,
                              SpatiallySparseBatchInterface &output,
                              float learningRate, float momentum) {
+  std::cout << "SigmoidLayer::backwards - Started" << std::endl;
+  input.summary();
+  output.summary();
   if (input.backpropErrors) {
     input.sub->dfeatures.resize(input.nSpatialSites *
                                 input.featuresPresent.size());
     applySigmoidBackProp(input, output, fn, memStream);
   }
+  std::cout << "SigmoidLayer::backwards - Ended" << std::endl;
 }
 int SigmoidLayer::calculateInputSpatialSize(int outputSpatialSize) {
   return outputSpatialSize;
