@@ -11,7 +11,7 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
    if (code != cudaSuccess)
    {
       fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
-      if (abort) exit(code);
+      if (abort) throw code;
    }
 }
 
@@ -135,11 +135,15 @@ template <typename t> t *&vectorCUDA<t>::dPtr() {
   copyToGPU();
   return d_vec;
 }
-template <typename t> std::vector<t> &vectorCUDA<t>::hVector() {
+
+template <typename t>
+std::vector<t> &vectorCUDA<t>::hVector() {
   copyToCPU();
   return vec;
 }
-template <typename t> unsigned int vectorCUDA<t>::size() {
+
+template <typename t>
+unsigned int vectorCUDA<t>::size() {
   if (onGPU)
     return dsize;
   return vec.size();

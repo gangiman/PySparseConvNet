@@ -71,7 +71,7 @@ public:
   activation processBatchForward(SpatiallySparseBatch &batch);
   void processBatchBackward(SpatiallySparseBatch &batch,
                                      float learningRate, float momentum,
-                                     std::vector<float> dfeatures);
+                                     const std::vector<float> &dfeatures);
   void processIndexLearnerBatch(SpatiallySparseBatch &batch, float learningRate,
                                 float momentum, std::ofstream &f);
 

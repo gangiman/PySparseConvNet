@@ -286,26 +286,30 @@ activation SparseConvNetCUDA::processBatchForward(SpatiallySparseBatch &batch) {
       layers[i]->forwards(batch, batch.interfaces[i], batch.interfaces[i + 1]);
     }
 
-    SpatiallySparseBatchInterface last_layer_batch_inteface = batch.interfaces.back();
+    SpatiallySparseBatchInterface &last_layer_batch_inteface = batch.interfaces.back();
     last_layer_batch_inteface.sub->features.copyToCPUAsync(memStream);
-    std::vector<float> &features = last_layer_batch_inteface.sub->features.hVector();
-      struct activation last_layer_activation = activation();
+    const std::vector<float> features = last_layer_batch_inteface.sub->features.hVector();
+    //std::copy(features.cbegin(), features.cend(), std::ostream_iterator(std::cout, ","));
+      activation last_layer_activation;
       last_layer_activation.grid_size = last_layer_batch_inteface.grids[0].mp.size();
       last_layer_activation.feature_size = features.size();
       last_layer_activation.nSpatialSites = last_layer_batch_inteface.nSpatialSites;
       last_layer_activation.spatialSize = last_layer_batch_inteface.spatialSize;
       last_layer_activation.nFeatures = last_layer_batch_inteface.nFeatures;
       last_layer_activation.features = features;
+
       for (SparseGridMap::iterator it = last_layer_batch_inteface.grids[0].mp.begin();
           it != last_layer_batch_inteface.grids[0].mp.end(); ++it) {
         last_layer_activation.sparse_grid.push_back(std::make_pair(it->first, it->second));
       }
+
+    last_layer_batch_inteface.sub->features.copyToGPUAsync(memStream);
     return last_layer_activation;
 }
 
 void SparseConvNetCUDA::processBatchBackward(SpatiallySparseBatch &batch,
                                      float learningRate, float momentum,
-                                     std::vector<float> dfeatures) {
+                                     const std::vector<float> &dfeatures) {
 
   SpatiallySparseBatchInterface &input = batch.interfaces.back();
 
@@ -313,12 +317,13 @@ void SparseConvNetCUDA::processBatchBackward(SpatiallySparseBatch &batch,
   assert(batch.batchSize == input.nSpatialSites);
   assert(input.nFeatures == input.featuresPresent.size());
 
+  input.sub->dfeatures.copyToCPU();
   input.sub->dfeatures.resize(input.nSpatialSites *
                                 input.featuresPresent.size());
 
   input.sub->dfeatures.hVector() = dfeatures;
+  input.sub->dfeatures.copyToGPU();
 
-  input.sub->features.copyToGPUAsync(memStream);
   cudaCheckError();
 
   for (int i = layers.size() - 1; i >= 0; i--) {
