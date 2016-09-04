@@ -124,24 +124,17 @@ void ConvolutionalLayer::preprocess(SpatiallySparseBatch &batch,
 void ConvolutionalLayer::forwards(SpatiallySparseBatch &batch,
                                   SpatiallySparseBatchInterface &input,
                                   SpatiallySparseBatchInterface &output) {
-  std::cout << "ConvolutionalLayer::forwards - Started" << std::endl;
-  input.summary();
-  output.summary();
   output.sub->features.resize(output.nSpatialSites *
                               output.featuresPresent.size());
   propForwardToMatrixMultiply(input.sub->features.dPtr(),
                               output.sub->features.dPtr(), output.rules.dPtr(),
                               output.nSpatialSites * fs,
                               input.featuresPresent.size(), memStream);
-  std::cout << "ConvolutionalLayer::forwards - Ended" << std::endl;
 }
 void ConvolutionalLayer::backwards(SpatiallySparseBatch &batch,
                                    SpatiallySparseBatchInterface &input,
                                    SpatiallySparseBatchInterface &output,
                                    float learningRate, float momentum) {
-  std::cout << "ConvolutionalLayer::backwards - Started" << std::endl;
-  input.summary();
-  output.summary();
   if (input.backpropErrors) {
     input.sub->dfeatures.resize(input.nSpatialSites *
                                 input.featuresPresent.size());
@@ -151,7 +144,6 @@ void ConvolutionalLayer::backwards(SpatiallySparseBatch &batch,
         output.rules.dPtr(), output.nSpatialSites * fs,
         input.featuresPresent.size(), memStream);
   }
-  std::cout << "ConvolutionalLayer::backwards - Ended" << std::endl;
 }
 int ConvolutionalLayer::calculateInputSpatialSize(int outputSpatialSize) {
   outSpatialSize = outputSpatialSize;
