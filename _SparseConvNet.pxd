@@ -19,8 +19,16 @@ cdef extern from "SparseConvNet/SparseConvNetCUDA.h":
         vector[activation] layer_activations(SpatiallySparseDataset &dataset)
         activation processBatchForward(SpatiallySparseBatch &batch)
         void processBatchBackward(SpatiallySparseBatch &batch,
-                                     float learningRate, float momentum,
-                                     vector[float] dfeatures)
+                                  float learningRate,
+                                  float momentum,
+                                  vector[float] dfeatures)
+        void addConvolutionalLayer(int nFeatures,
+                                   int filterSize,
+                                   int filterStride,
+                                   ActivationFunction activationFn,
+                                   float dropout,
+                                   int minActiveInputs,
+                                   float poolingToFollow)
 
     struct pd_report:
         float errorRate

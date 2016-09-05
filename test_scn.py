@@ -70,11 +70,11 @@ class TestTraining(unittest.TestCase):
 
         from deepC2Network import generate_modelnet_dataset
 
-        dataset = generate_modelnet_dataset(full=False, limit=10)
+        dataset = generate_modelnet_dataset(full=True, limit=4)
 
         dataset.summary()
 
-        learning_rate, momentum = 0.003, 0.99
+        learning_rate = 0.003
 
         for _bid, batch in enumerate(network.batch_generator(dataset, batchSize)):
             print("Processing batch {}".format(_bid))
@@ -86,7 +86,7 @@ class TestTraining(unittest.TestCase):
                                   np.random.randn(len(activation['features'])))
             ]
             network.processBatchBackward(
-                batch, learning_rate, momentum, delta_features)
+                batch, delta_features, learning_rate)
             print("Backward pass Done!")
 
 

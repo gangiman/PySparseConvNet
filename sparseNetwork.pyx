@@ -1,10 +1,20 @@
 from _SparseConvNet cimport SparseConvNet
 from _SparseConvNet cimport SpatiallySparseBatch
 from _SparseConvNet cimport BatchProducer
+
+from _SparseConvNet cimport NOSIGMOID
+from _SparseConvNet cimport RELU
+from _SparseConvNet cimport LEAKYRELU
 from _SparseConvNet cimport VLEAKYRELU
+from _SparseConvNet cimport TANH
+from _SparseConvNet cimport SOFTMAX
+from _SparseConvNet cimport PRELU
+from _SparseConvNet cimport SIGMOID
+
 from _SparseConvNet cimport TRAINBATCH
 from _SparseConvNet cimport TESTBATCH
 from _SparseConvNet cimport UNLABELEDBATCH
+
 from _SparseConvNet cimport NetworkInNetworkLayer
 from _SparseConvNet cimport OffSurfaceModelPicture
 from _SparseConvNet cimport Picture
@@ -96,6 +106,8 @@ cdef class SparseNetwork:
             yield sb
             batch = bp.nextBatch()
 
+    def computeInputSpatialSize(self):
+        return self.net.cnn.get().computeInputSpatialSize(1)
 
     def processDataset(self, SparseDataset dataset, int batchSize=100,
                        float learningRate=0, float momentum=0.99):
@@ -106,8 +118,8 @@ cdef class SparseNetwork:
     def processBatchForward(self, SparseBatch batch):
         return self.net.cnn.get().processBatchForward(deref(batch.ssb))
 
-    def processBatchBackward(self, SparseBatch batch, float learningRate,
-                             float momentum, dfeatures):
+    def processBatchBackward(self, SparseBatch batch, dfeatures,
+                             float learningRate=0, float momentum=0.99):
         self.net.cnn.get().processBatchBackward(deref(batch.ssb),learningRate,
                              momentum, dfeatures)
 
@@ -123,6 +135,48 @@ cdef class SparseNetwork:
                                           confusionMatrixFilename)
         return reports
 
+    @staticmethod
+    def _get_activation_fn(fn_name):
+        if fn_name == 'NOSIGMOID':
+            return NOSIGMOID
+        elif fn_name == 'RELU':
+            return RELU
+        elif fn_name == 'VLEAKYRELU':
+            return VLEAKYRELU
+        elif fn_name == 'LEAKYRELU':
+            return LEAKYRELU
+        elif fn_name == 'TANH':
+            return TANH
+        elif fn_name == 'SOFTMAX':
+            return SOFTMAX
+        elif fn_name == 'PRELU':
+            return PRELU
+        elif fn_name == 'SIGMOID':
+            return SIGMOID
+        else:
+            raise ValueError("Unknown activation function!")
+
+    def addConvolutionalLayer(self, nFeatures, filterSize, filterStride,
+                              activationFn = 'RELU', dropout = 0.0,
+                              minActiveInputs = 1, poolingToFollow = 1.0):
+        _activationFn = self._get_activation_fn(activationFn)
+        self.net.cnn.get().addConvolutionalLayer(nFeatures, filterSize,
+                                                 filterStride,_activationFn,
+                                                 dropout,
+                                                 minActiveInputs,
+                                                 poolingToFollow)
+        if filterSize > 1:
+            self.layers.append({
+                'type': 'ConvolutionalLayer',
+                'filterSize': filterSize,
+                'filterStride':  filterStride,
+
+            })
+        self.layers.append({
+            'type': 'LearntLayer',
+            'activationFn': activationFn
+        })
+
 
     def addLeNetLayerMP(self, nFeatures, filterSize, filterStride, poolSize,
                         poolStride, activationFn, dropout, minActiveInputs=1):
@@ -136,10 +190,7 @@ cdef class SparseNetwork:
         float dropout
         int minActiveInputs
         """
-        if activationFn == 'VLEAKYRELU':
-            _activationFn = VLEAKYRELU
-        else:
-            raise ValueError("Unknown activation function!")
+        _activationFn = self._get_activation_fn(activationFn)
         self.net.addLeNetLayerMP(nFeatures, filterSize, filterStride, poolSize,
                         poolStride, _activationFn, dropout, minActiveInputs)
         self.layers.append({
@@ -207,6 +258,16 @@ cdef class SparseNetwork:
         np_matrix[...] = prediction_matrix
         return np_matrix
 
+    def get_num_of_paramenters(self):
+        num_of_paramenters = 0
+        layers_with_weights = self.get_weights()
+        for layer_dict in layers_with_weights:
+            if layer_dict['type'] == 'LearntLayer':
+                num_of_paramenters += (layer_dict['nFeaturesIn'] + 1) * \
+                    layer_dict['nFeaturesOut']
+        return num_of_paramenters
+
+
     def layer_activations(self, Off3DPicture picture):
         cdef vector[activation] interfaces
         cdef SparseDataset dataset = SparseDataset("-", 'UNLABELEDBATCH', 1, 1)
@@ -272,7 +333,7 @@ cdef class SparseDataset:
 
 
 cdef class Off3DPicture:
-    """wraps “.off” mesh objects, can voxelise them based on some parameters
+    """wraps '.off' mesh objects, can voxelise them based on some parameters
     """
     cdef OffSurfaceModelPicture* pic
     cdef SparseGrid grid
