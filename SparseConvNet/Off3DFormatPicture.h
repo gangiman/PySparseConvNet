@@ -22,5 +22,5 @@ public:
   void affineTransform(RNG &rng, float alpha);
   void codifyInputData(SparseGrid &grid, std::vector<float> &features,
                        int &nSpatialSites, int spatialSize);
-  Picture *distort(RNG &rng, batchType type = TRAINBATCH);
+  std::shared_ptr<Picture> distort(RNG &rng, batchType type = TRAINBATCH);
 };

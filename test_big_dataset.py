@@ -10,8 +10,8 @@ class TestTrainingOfBigDataset(unittest.TestCase):
         epoch = 2
         network = create_dC2()
         print("Created network")
-        dataset = generate_modelnet_dataset(full=False, limit=1)
-        dataset.repeatSamples(200)
+        dataset = generate_modelnet_dataset(full=False, limit=99999)
+        # dataset.repeatSamples(200)
         dataset.summary()
         print("Created dataset {0}".format(dataset.name))
         for epoch in xrange(1, epoch):

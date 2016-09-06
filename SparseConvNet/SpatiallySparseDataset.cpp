@@ -13,7 +13,7 @@ void SpatiallySparseDataset::summary() {
   if (type != UNLABELEDBATCH){
     std::vector<int> count(nClasses);
     for (int _i=0;_i<pictures.size();_i++)
-      count[pictures[_i]->label]++;
+      count[ real_pictures[pictures[_i]]->label ]++;
 
     std::cout << "nPictures/class: ";
     for (int _i=0;_i<count.size();_i++)
@@ -51,9 +51,10 @@ SpatiallySparseDataset SpatiallySparseDataset::balancedSubset(int n) {
   for (unsigned int i = 0; i < pictures.size() and classesDone < nClasses;
        i++) {
     auto pic = pictures[permutation[i]];
-    if (count[pic->label]++ < n)
+    auto real_pic = real_pictures[pictures[permutation[i]]];
+    if (count[real_pic->label]++ < n)
       bs.pictures.push_back(pic);
-    if (count[pic->label] == n)
+    if (count[real_pic->label] == n)
       classesDone++;
   }
   return bs;
@@ -93,6 +94,10 @@ std::vector<std::string> globVector(const std::string &pattern) {
   globfree(&glob_result);
   std::sort(files.begin(), files.end());
   return files;
+}
+
+std::shared_ptr<Picture> get_fucking_picture(const int &i) {
+    return std::shared_ptr<Picture>();
 }
 
 // Usage: std::vector<std::string> files = globVector("./*");

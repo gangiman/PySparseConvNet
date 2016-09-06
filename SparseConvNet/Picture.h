@@ -9,7 +9,7 @@ class Picture {
 public:
   virtual void codifyInputData(SparseGrid &grid, std::vector<float> &features,
                                int &nSpatialSites, int spatialSize) = 0;
-  virtual Picture *distort(RNG &rng, batchType type) { return this; }
+  virtual std::shared_ptr<Picture> distort(RNG &rng, batchType type) { return std::shared_ptr<Picture>(this); }
   virtual std::string identify();
   virtual void loadPicture() = 0;
   bool is_loaded;

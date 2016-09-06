@@ -440,10 +440,10 @@ std::vector<struct pd_report> SparseConvNetCUDA::processDatasetRepeatTest(
     for (int i = 0; i < dataset.pictures.size(); ++i) {
       std::vector<int> predictions = vectorTopIndices(probs[i], nTop);
       for (int j = 0; j < nTop; j++)
-        if (predictions[j] == dataset.pictures[i]->label)
+        if (predictions[j] == dataset.real_pictures[dataset.pictures[i]]->label)
           errors--;
       nll -= log(
-          std::max(probs[i][dataset.pictures[i]->label] / rep, (float)1.0e-15));
+          std::max(probs[i][dataset.real_pictures[dataset.pictures[i]]->label] / rep, (float)1.0e-15));
     }
 
     if (!predictionsFilename.empty()) {
@@ -452,9 +452,9 @@ std::vector<struct pd_report> SparseConvNetCUDA::processDatasetRepeatTest(
       if (!dataset.header.empty())
         f << dataset.header << std::endl;
       for (int i = 0; i < dataset.pictures.size(); ++i) {
-        f << dataset.pictures[i]->identify();
+        f << dataset.real_pictures[dataset.pictures[i]]->identify();
         if (dataset.type != UNLABELEDBATCH)
-          f << "," << dataset.pictures[i]->label;
+          f << "," << dataset.real_pictures[dataset.pictures[i]]->label;
         for (int j = 0; j < dataset.nClasses; ++j)
           f << "," << probs[i][j] / rep;
         f << std::endl;
@@ -464,7 +464,7 @@ std::vector<struct pd_report> SparseConvNetCUDA::processDatasetRepeatTest(
       std::vector<float> cm(dataset.nClasses * dataset.nClasses);
       for (int i = 0; i < dataset.pictures.size(); ++i)
         for (int j = 0; j < dataset.nClasses; ++j)
-          cm[dataset.pictures[i]->label * dataset.nClasses + j] +=
+          cm[dataset.real_pictures[dataset.pictures[i]]->label * dataset.nClasses + j] +=
               probs[i][j] / rep;
       std::ofstream f(confusionMatrixFilename.c_str());
       for (int i = 0; i < dataset.nClasses; ++i) {

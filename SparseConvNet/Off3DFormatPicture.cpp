@@ -143,7 +143,7 @@ void OffSurfaceModelPicture::codifyInputData(SparseGrid &grid,
   }
 }
 
-Picture *OffSurfaceModelPicture::distort(RNG &rng, batchType type) {
+std::shared_ptr<Picture> OffSurfaceModelPicture::distort(RNG &rng, batchType type) {
   OffSurfaceModelPicture *pic = new OffSurfaceModelPicture(*this);
   if (type != UNLABELEDBATCH)
   {
@@ -156,5 +156,5 @@ Picture *OffSurfaceModelPicture::distort(RNG &rng, batchType type) {
   }else{
     pic->normalize();
   }
-  return pic;
+  return std::shared_ptr<Picture>(pic);
 }

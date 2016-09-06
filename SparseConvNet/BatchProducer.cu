@@ -48,13 +48,14 @@ void BatchProducer::preprocessBatch(int c, int cc, RNG &rng) {
   cnn.batchPool[cc].interfaces[0].featuresPresent.hVector() =
       range(dataset.nFeatures);
   int n_pictures = dataset.pictures.size();
-  for (int i = c * batchSize; i < min((c + 1) * batchSize, n_pictures); i++) {
+  for (int i = c * batchSize; i < std::min((c + 1) * batchSize, n_pictures); i++) {
     // check whether picture is already loaded
-    if (!dataset.pictures[permutation[i]]->is_loaded) {
-      dataset.pictures[permutation[i]]->loadPicture();
+
+    if (!dataset.real_pictures[dataset.pictures[permutation[i]]]->is_loaded) {
+        dataset.real_pictures[dataset.pictures[permutation[i]]]->loadPicture();
     }
 
-    Picture *pic = dataset.pictures[permutation[i]]->distort(rng, dataset.type);
+    std::shared_ptr<Picture> pic = dataset.real_pictures[dataset.pictures[permutation[i]]]->distort(rng, dataset.type);
     cnn.batchPool[cc].sampleNumbers.push_back(permutation[i]);
     cnn.batchPool[cc].batchSize++;
     cnn.batchPool[cc].interfaces[0].grids.push_back(SparseGrid());
@@ -64,8 +65,8 @@ void BatchProducer::preprocessBatch(int c, int cc, RNG &rng) {
         cnn.batchPool[cc].interfaces[0].sub->features.hVector(),
         cnn.batchPool[cc].interfaces[0].nSpatialSites,
         cnn.batchPool[cc].interfaces[0].spatialSize);
-    if (pic != dataset.pictures[permutation[i]])
-      delete pic;
+    //if (pic != dataset.pictures[permutation[i]])
+    //  delete pic;
   }
   assert(cnn.batchPool[cc].interfaces[0].sub->features.size() ==
          cnn.batchPool[cc].interfaces[0].nFeatures *
