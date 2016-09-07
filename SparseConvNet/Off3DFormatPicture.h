@@ -14,13 +14,15 @@ public:
   int renderSize;
   std::string picture_path;
   OffSurfaceModelPicture(std::string filename, int renderSize, int label_ = -1);
-  ~OffSurfaceModelPicture();
+  virtual ~OffSurfaceModelPicture() {
+    points.reset();
+  }
   void loadPicture();
+  void unloadPicture() override;
   void normalize(); // Fit centrally in the cube [-scale_n/2,scale_n/2]^3
   void random_rotation(RNG &rng);
   void jiggle(RNG &rng, float alpha);
   void affineTransform(RNG &rng, float alpha);
-  void codifyInputData(SparseGrid &grid, std::vector<float> &features,
-                       int &nSpatialSites, int spatialSize);
+  void codifyInputData(SparseGrid &grid, std::vector<float> &features, int &nSpatialSites, int spatialSize);
   Picture *distort(RNG &rng, batchType type = TRAINBATCH);
 };

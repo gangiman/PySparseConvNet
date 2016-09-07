@@ -89,7 +89,12 @@ void OffSurfaceModelPicture::loadPicture() {
   is_loaded = true;
 }
 
-OffSurfaceModelPicture::~OffSurfaceModelPicture() {}
+void OffSurfaceModelPicture::unloadPicture() {
+  points.reset();
+  std::vector<std::vector<int>>().swap(surfaces); // force vector reallocation
+  is_loaded = false;
+}
+
 void OffSurfaceModelPicture::normalize() { // Fit centrally in the cube
                                            // [-renderSize/2,renderSize/2]^3
   arma::mat pointsm = arma::min(points, 0);

@@ -12,6 +12,7 @@ public:
   virtual Picture *distort(RNG &rng, batchType type) { return this; }
   virtual std::string identify();
   virtual void loadPicture() = 0;
+  virtual void unloadPicture() {}
   bool is_loaded;
   int label; //-1 for unknown
   Picture(int label = -1);

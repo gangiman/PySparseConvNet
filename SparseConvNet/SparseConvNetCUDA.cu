@@ -21,6 +21,7 @@
 #include "SoftmaxClassifier.h"
 #include "BatchProducer.h"
 #include "SpatiallySparseDataset.h"
+#include <chrono>
 
 SparseConvNetCUDA::SparseConvNetCUDA(int dimension, int nInputFeatures,
                                      int nClasses, int pciBusID, int nTop,
@@ -345,10 +346,18 @@ pd_report SparseConvNetCUDA::processDataset(SpatiallySparseDataset &dataset,
     f.open("unlabelledData.predictions");
     g.open("unlabelledData.probabilities");
   }
+
+
   while (SpatiallySparseBatch *batch = bp.nextBatch()) {
+    auto start = std::chrono::steady_clock::now();
+
     processBatch(*batch, learningRate, momentum, f, g);
     errorRate += batch->mistakes * 1.0 / dataset.pictures.size();
     nll += batch->negativeLogLikelihood * 1.0 / dataset.pictures.size();
+
+    auto end = std::chrono::steady_clock::now();
+    auto diff = end - start;
+    std::cout << "batch finished in " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
   }
   auto end = std::chrono::system_clock::now();
   auto diff =
