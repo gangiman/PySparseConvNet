@@ -54,7 +54,7 @@ void BatchProducer::preprocessBatch(int c, int cc, RNG &rng) {
       dataset.pictures[permutation[i]]->loadPicture();
     }
 
-    Picture *pic = dataset.pictures[permutation[i]]->distort(rng, dataset.type);
+    std::shared_ptr<Picture> pic(dataset.pictures[permutation[i]]->distort(rng, dataset.type));
     cnn.batchPool[cc].sampleNumbers.push_back(permutation[i]);
     cnn.batchPool[cc].batchSize++;
     cnn.batchPool[cc].interfaces[0].grids.push_back(SparseGrid());
@@ -64,8 +64,10 @@ void BatchProducer::preprocessBatch(int c, int cc, RNG &rng) {
         cnn.batchPool[cc].interfaces[0].sub->features.hVector(),
         cnn.batchPool[cc].interfaces[0].nSpatialSites,
         cnn.batchPool[cc].interfaces[0].spatialSize);
-    if (pic != dataset.pictures[permutation[i]])
-      delete pic;
+
+    // Force clean
+    pic.reset();
+    dataset.pictures[permutation[i]]->unloadPicture();
   }
   assert(cnn.batchPool[cc].interfaces[0].sub->features.size() ==
          cnn.batchPool[cc].interfaces[0].nFeatures *

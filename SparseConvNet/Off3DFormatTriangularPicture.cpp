@@ -1,3 +1,4 @@
+#if 0
 #include "Off3DFormatPicture.h"
 #include <string>
 #include <fstream>
@@ -93,7 +94,7 @@ void OffSurfaceModelPicture::jiggle(RNG &rng, float alpha) {
 }
 
 void OffSurfaceModelPicture::affineTransform(RNG &rng, float alpha) {
-  arma::mat L = arma::eye<arma::mat>(3, 3);
+  static const arma::mat L = arma::eye<arma::mat>(3, 3);
   for (int i = 0; i < 3; i++)
     for (int j = 0; j < 3; j++)
       L(i, j) += rng.uniform(-alpha, alpha);
@@ -130,6 +131,7 @@ arma::mat convPyrCub =
 
 Picture *OffSurfaceModelPicture::distort(RNG &rng, batchType type) {
   OffSurfaceModelPicture *pic = new OffSurfaceModelPicture(*this);
+
   pic->random_rotation(rng);
   pic->normalize();
   if (type == TRAINBATCH) {
@@ -139,3 +141,4 @@ Picture *OffSurfaceModelPicture::distort(RNG &rng, batchType type) {
   pic->points = pic->points * convPyrCub;
   return pic;
 }
+#endif

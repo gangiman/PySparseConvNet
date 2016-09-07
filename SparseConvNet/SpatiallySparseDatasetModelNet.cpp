@@ -12,7 +12,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include "OpenCVPicture.h"
+//#include "OpenCVPicture.h"
 #include "Off3DFormatPicture.h"
 
 //#include <sys/types.h>
