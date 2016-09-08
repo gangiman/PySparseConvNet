@@ -386,11 +386,10 @@ std::vector<struct activation> SparseConvNetCUDA::layer_activations(
         SpatiallySparseDataset &dataset) {
   assert(dataset.pictures.size() == 1);
   int batchSize = 1;
-  std::ofstream f, g;
   std::vector<struct activation> activations;
   BatchProducer bp(*this, dataset, inputSpatialSize, batchSize);
   while (SpatiallySparseBatch *batch = bp.nextBatch()) {
-    processBatch(*batch, 0, 0, f, g);
+    processBatchForward(*batch);
     for (int i = 0; i < batch->interfaces.size(); ++i){
       batch->interfaces[i].sub->features.copyToCPUAsync(memStream);
       std::vector<float> &features = batch->interfaces[i].sub->features.hVector();

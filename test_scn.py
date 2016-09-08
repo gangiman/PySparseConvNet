@@ -70,7 +70,7 @@ class TestTraining(unittest.TestCase):
 
         from deepC2Network import generate_modelnet_dataset
 
-        dataset = generate_modelnet_dataset(full=True, limit=4)
+        dataset = generate_modelnet_dataset(full=True, limit=1)
 
         dataset.summary()
 
@@ -80,11 +80,8 @@ class TestTraining(unittest.TestCase):
             print("Processing batch {}".format(_bid))
             activation = network.processBatchForward(batch)
             print("Forward pass Done!")
-            delta_features = [
-                ta if np.random.random() > .1 else ra
-                for ta, ra in zip(activation['features'],
-                                  np.random.randn(len(activation['features'])))
-            ]
+            ft = activation['features']
+            delta_features = ft - np.random.random(ft.shape)
             network.processBatchBackward(
                 batch, delta_features, learning_rate)
             print("Backward pass Done!")

@@ -39,6 +39,7 @@ def load_3d_off():
     print ("done")
     return pairs
 
+
 def generate_modelnet_dataset(full=False, limit=-1):
     number_of_features = 1
     renderSize = 40

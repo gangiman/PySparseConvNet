@@ -164,7 +164,6 @@ SpatiallySparseBatch *BatchProducer::nextBatch() {
   } else {
     RNG rng;
     int cc = batchCounter % cnn.nBatchProducerThreads;
-    ;
     preprocessBatch(batchCounter, cc, rng);
     /////////////////////////////////////////////////////////
     cnn.batchPool[cc].interfaces[0].sub->features.copyToGPUAsync(cnn.memStream);

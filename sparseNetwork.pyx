@@ -91,12 +91,14 @@ cdef class SparseNetwork:
     def __dealloc__(self):
         del self.net
 
-    def batch_generator(self, SparseDataset dataset, batchSize):
-        spatialSize = self.net.cnn.get().computeInputSpatialSize(1)
+    def batch_generator(self, SparseDataset dataset, batchSize,
+                        output_spatial_size=1):
+        input_spatial_size = self.net.cnn.get().computeInputSpatialSize(
+            output_spatial_size)
         cdef BatchProducer* bp = new BatchProducer(
             deref(self.net.cnn.get()),
             deref(dataset.ssd),
-            spatialSize,
+            input_spatial_size,
             batchSize)
         cdef SpatiallySparseBatch *batch = bp.nextBatch()
         while batch != NULL:
@@ -116,12 +118,23 @@ cdef class SparseNetwork:
         return self.net.processDataset(deref(dataset.ssd), batchSize, learningRate, momentum)
 
     def processBatchForward(self, SparseBatch batch):
-        return self.net.cnn.get().processBatchForward(deref(batch.ssb))
+        cdef activation _activation
+        _activation = self.net.cnn.get().processBatchForward(deref(batch.ssb))
+        last_layer_activation = dict()
+        bs = batch.get_batchSize()
+        last_layer_activation['grid_size'] = _activation.grid_size
+        last_layer_activation['spatialSize'] = _activation.spatialSize
+        last_layer_activation['nFeatures'] = _activation.nFeatures
+        last_layer_activation['features'] = np.zeros(_activation.features.size(),
+                                                     dtype=np.float64)
+        last_layer_activation['features'][:] = _activation.features[:]
+        last_layer_activation['features'] = last_layer_activation['features'].reshape((bs, _activation.nFeatures))
+        return last_layer_activation
 
-    def processBatchBackward(self, SparseBatch batch, dfeatures,
+    def processBatchBackward(self, SparseBatch batch, np.ndarray dfeatures,
                              float learningRate=0, float momentum=0.99):
         self.net.cnn.get().processBatchBackward(deref(batch.ssb),learningRate,
-                             momentum, dfeatures)
+                             momentum, dfeatures.ravel().tolist())
 
     def processDatasetRepeatTest(self, SparseDataset dataset, batchSize=100, nReps=12,
                                  predictionsFilename="",
