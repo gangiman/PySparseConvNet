@@ -149,6 +149,10 @@ void OffSurfaceModelPicture::codifyInputData(SparseGrid &grid,
 }
 
 Picture *OffSurfaceModelPicture::distort(RNG &rng, batchType type) {
+  std::lock_guard<std::mutex> l(distort_mtx);
+
+  if(!this->is_loaded) this->loadPicture();
+
   OffSurfaceModelPicture *pic = new OffSurfaceModelPicture(*this);
   if (type != UNLABELEDBATCH)
   {
@@ -161,5 +165,6 @@ Picture *OffSurfaceModelPicture::distort(RNG &rng, batchType type) {
   }else{
     pic->normalize();
   }
+  this->unloadPicture();
   return pic;
 }

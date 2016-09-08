@@ -10,9 +10,18 @@ private:
   arma::mat points;
   std::vector<std::vector<int>>
       surfaces; // Will assume all surfaces are triangles for now
+
+  std::mutex distort_mtx;
 public:
   int renderSize;
   std::string picture_path;
+
+  OffSurfaceModelPicture(const OffSurfaceModelPicture& other)
+    : points(other.points)
+    , surfaces(other.surfaces)
+    , renderSize(other.renderSize)
+    , picture_path(other.picture_path)
+  {}
   OffSurfaceModelPicture(std::string filename, int renderSize, int label_ = -1);
   virtual ~OffSurfaceModelPicture() {
     points.reset();
