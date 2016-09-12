@@ -23,7 +23,7 @@ BatchProducer::BatchProducer(SparseConvNetCUDA &cnn,
   assert(batchSize > 0);
   nBatches = (dataset.pictures.size() + batchSize - 1) / batchSize;
   permutation = range(dataset.pictures.size());
-  if (dataset.type == TRAINBATCH) {
+  if (dataset.type == TRAINBATCH && dataset.do_shuffle) {
     RNG rng;
     rng.vectorShuffle(permutation);
   }

@@ -14,6 +14,7 @@ public:
   std::string name;
   std::string header;
   std::vector<Picture *> pictures;
+  bool do_shuffle = true;
   int renderSize;
   int nFeatures;
   int nClasses;

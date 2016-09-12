@@ -279,6 +279,7 @@ cdef extern from "SparseConvNet/SpatiallySparseDataset.h":
         vector[Picture *] pictures
         int nFeatures
         int nClasses
+        bool do_shuffle
         batchType type
         void summary()
         void shuffle()

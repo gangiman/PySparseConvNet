@@ -298,8 +298,10 @@ cdef class SparseDataset:
     cdef SpatiallySparseDataset* ssd
     cdef string type
 
-    def __cinit__(self, string name, string _type, int nFeatures, int nClasses):
+    def __cinit__(self, string name, string _type, int nFeatures, int nClasses,
+                  shuffle=True):
         self.ssd = new SpatiallySparseDataset()
+        self.ssd.do_shuffle = shuffle
         self.type = _type
         if _type == _train:
             self.ssd.type = TRAINBATCH
