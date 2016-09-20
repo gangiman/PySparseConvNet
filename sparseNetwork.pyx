@@ -73,6 +73,7 @@ cdef class SparseNetwork:
     cdef int dimension
     cdef int nInputFeatures
     cdef int nClasses
+    cdef int input_spatial_size
 
     def __cinit__(self, int dimension, int nInputFeatures, int nClasses,
                   int cudaDevice=-1, int nTop=1, int nThreads=1):
@@ -87,18 +88,20 @@ cdef class SparseNetwork:
         self.dimension = dimension
         self.nInputFeatures = nInputFeatures
         self.nClasses = nClasses
+        self.input_spatial_size = -1
 
     def __dealloc__(self):
         del self.net
 
     def batch_generator(self, SparseDataset dataset, batchSize,
                         output_spatial_size=1):
-        input_spatial_size = self.net.cnn.get().computeInputSpatialSize(
-            output_spatial_size)
+        if self.input_spatial_size < 0:
+            self.input_spatial_size = self.net.cnn.get().\
+                computeInputSpatialSize(output_spatial_size)
         cdef BatchProducer* bp = new BatchProducer(
             deref(self.net.cnn.get()),
             deref(dataset.ssd),
-            input_spatial_size,
+            self.input_spatial_size,
             batchSize)
         cdef SpatiallySparseBatch *batch = bp.nextBatch()
         while batch != NULL:
@@ -282,6 +285,9 @@ cdef class SparseNetwork:
 
 
     def layer_activations(self, Off3DPicture picture):
+        if self.input_spatial_size < 0:
+            self.input_spatial_size = self.net.cnn.get().\
+                computeInputSpatialSize(1)
         cdef vector[activation] interfaces
         cdef SparseDataset dataset = SparseDataset("-", 'UNLABELEDBATCH', 1, 1)
         dataset.add_picture(picture)

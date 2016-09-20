@@ -37,7 +37,7 @@ template <typename t> void vectorCUDA<t>::copyToCPU() {
   if (onGPU) {
     onGPU = false;
     if (dsize > 0) {
-      std::cout << "blocking copyToCPU " << dsize << " " << dAllocated << "\n";
+      //std::cout << "blocking copyToCPU " << dsize << " " << dAllocated << "\n";
       vec.resize(dsize);
       cudaSafeCall(cudaMemcpy(&vec[0], d_vec, sizeof(t) * dsize,
                               cudaMemcpyDeviceToHost));
@@ -57,7 +57,7 @@ template <typename t> void vectorCUDA<t>::copyToGPU() {
       cudaCheckError();
     }
     if (dsize > 0) {
-      std::cout << "blocking copyToGPU " << dsize << " " << dAllocated << "\n";
+      //std::cout << "blocking copyToGPU " << dsize << " " << dAllocated << "\n";
       cudaSafeCall(cudaMemcpy(d_vec, &vec[0], sizeof(t) * dsize,
                               cudaMemcpyHostToDevice));
     }
