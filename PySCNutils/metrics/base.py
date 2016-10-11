@@ -14,12 +14,13 @@ except ImportError:
 
 def get_feature_extractor(network, weights_path, _layer=17,
                           renderSize=40):
-    weights_folder = os.path.dirname(weights_path)
-    weights_file = os.path.basename(weights_path)
-    prefix, epoch = weights_file.split('_epoch')
-    epoch = epoch.strip('-.cnn')
-    network.loadWeights(
-        os.path.join(weights_folder, prefix), int(epoch))
+    if weights_path is not None:
+        weights_folder = os.path.dirname(weights_path)
+        weights_file = os.path.basename(weights_path)
+        prefix, epoch = weights_file.split('_epoch')
+        epoch = epoch.strip('-.cnn')
+        network.loadWeights(
+            os.path.join(weights_folder, prefix), int(epoch))
 
     def wraped(pic_path):
         pic = Off3DPicture(pic_path, renderSize)
@@ -58,8 +59,11 @@ class NNMetric(Metric):
     ))
 
     def __init__(self, network, weights_path=None, norm='cos', _layer=17,
-                 render_size=40, cache_dir='/tmp'):
-        self.name = os.path.basename(weights_path).rstrip('.cnn')
+                 render_size=40, cache_dir='/tmp', net_hash=None):
+        if weights_path is None:
+            self.name = net_hash
+        else:
+            self.name = os.path.basename(weights_path).rstrip('.cnn')
         self.metric = self.dist[norm]
         self.unique_hash = "{}_{}_{}_{}".format(self.name, norm, _layer,
                                                 render_size)

@@ -15,14 +15,16 @@ except ImportError:
     raise
 
 
-def get_functions(norm_type='cosine'):
+def get_functions(norm_type='cosine', margin=0.1, norm_for_l2=True):
     """
     function linear: triplet_loss = ReLU(L + norm(g,p) - norm(g,n))
     function logarithmic: triplet_loss = ln(1 + ReLU(norm(g,p)/(norm(g,n) + L))
-    norm - L2 / cos
-    g (ground) - some sample, p (positive) - farthest same class sample in batch,
-    n - (negative) closest not same class sample in batch
-    :param norm_type:
+    g (ground) - some sample, p (positive) - same class sample,
+    n - (negative) not same class sample.
+
+    :param norm_type: - 'L2' or 'cosine'
+    :param margin: float
+    :param norm_for_l2:
     :return:
     """
     from autograd import grad
@@ -32,8 +34,11 @@ def get_functions(norm_type='cosine'):
         return 1 - _np.dot(x, y)/_np.sqrt(_np.dot(x, x) * _np.dot(y, y))
 
     def l2_norm(x, y):
-        xn = x/_np.sqrt((x * x).sum())
-        yn = y/_np.sqrt((y * y).sum())
+        if norm_for_l2:
+            xn = x/_np.sqrt((x * x).sum())
+            yn = y/_np.sqrt((y * y).sum())
+        else:
+            xn, yn = x, y
         return ((xn - yn) ** 2).sum()
 
     if norm_type == 'cosine':
@@ -45,16 +50,16 @@ def get_functions(norm_type='cosine'):
         return _np.maximum(0, x)
 
     def _linear_triplet_loss(trip):
-        L = 0.1
         g, p, n = trip
-        return relu(L + norm(g, p) - norm(g, n))
+        return relu(margin + norm(g, p) - norm(g, n))
 
     return _linear_triplet_loss, grad(_linear_triplet_loss), norm
 
 
 def generate_network(dimension=3, l=5, k=32, fn='VLEAKYRELU', nInputFeatures=1,
-                     nClasses=50, p=0.0):
-    network = SparseNetwork(dimension, nInputFeatures, nClasses)
+                     nClasses=50, p=0.0, cudaDevice=-1):
+    network = SparseNetwork(dimension, nInputFeatures, nClasses,
+                            cudaDevice=cudaDevice)
     for i in range(l + 1):
         network.addLeNetLayerMP(
             (i + 1) * k, 2, 1, 3 if (i < l) else 1, 2 if (i < l) else 1, fn,
@@ -62,23 +67,33 @@ def generate_network(dimension=3, l=5, k=32, fn='VLEAKYRELU', nInputFeatures=1,
     return network
 
 
-def train(ds, network, batch_size=150, test_every_n_batches=100,
-          unique_classes_in_batch=5, lr_decay_rate=0.025, pair_taking_method=0,
+def nop(*args, **kwargs):
+    pass
+
+
+def train(ds, network, experiment_hash,
+          batch_size=150, test_every_n_batches=100,
+          unique_classes_in_batch=5, lr_decay_rate=0.025,
+          pair_taking_method=0,
           render_size=40, weights_dir='./weights',
-          in_batch_sample_selection=False):
-    linear_triplet_loss, ltl_grad, norm = get_functions()
+          in_batch_sample_selection=False, norm_type='cosine', L=1,
+          epoch=0, epoch_limit=None,
+          batch_iteration_hook=nop, epoch_iteration_hook=nop):
+    linear_triplet_loss, ltl_grad, norm = get_functions(norm_type=norm_type,
+                                                        margin=L)
     ds.summary()
     gen = ds.generate_triplets(batch_size=batch_size,
                                unique_classes_in_batch=unique_classes_in_batch,
                                method=pair_taking_method)
 
-    weights_temp = os.path.join(weights_dir, '{}_triplet'.format(ds.name))
+    weights_temp = os.path.join(weights_dir, experiment_hash)
     print('Taking {} batches in to dataset'.format(test_every_n_batches))
-    epoch = 0
-
-    total_number_of_epochs = int(np.ceil(sum(map(
-        lambda l: len(l) * (len(l) - 1), ds.classes
-    )) / (batch_size / 3.0) / test_every_n_batches))
+    if epoch_limit is None:
+        total_number_of_epochs = int(np.ceil(sum(map(
+            lambda l: len(l) * (len(l) - 1), ds.classes
+        )) / (batch_size / 3.0) / test_every_n_batches))
+    else:
+        total_number_of_epochs = epoch_limit
 
     for _ in tqdm(xrange(total_number_of_epochs),
                   total=total_number_of_epochs, unit="epoch"):
@@ -95,9 +110,9 @@ def train(ds, network, batch_size=150, test_every_n_batches=100,
             break
         batch_gen = network.batch_generator(train_ds, batch_size)
         learning_rate = 0.003 * np.exp(- lr_decay_rate * epoch)
-        for batch, _ranges in tqdm(izip(batch_gen, ranges_for_all),
-                                   leave=False, unit='batch',
-                                   total=test_every_n_batches):
+        for bid, (batch, _ranges) in tqdm(
+                enumerate(izip(batch_gen, ranges_for_all)),
+                leave=False, unit='batch', total=test_every_n_batches):
             activation = network.processBatchForward(batch)
             feature_vectors = activation['features']
             delta = np.zeros_like(feature_vectors)
@@ -110,7 +125,8 @@ def train(ds, network, batch_size=150, test_every_n_batches=100,
                         anchor = one_class_ids[0]
                         positive_id = np.apply_along_axis(
                             partial(norm, feature_vectors[anchor]), 1,
-                            feature_vectors[one_class_ids[1:]]).argmax() + 1
+                            feature_vectors[one_class_ids[1:]]).argmax()
+                        positive_id += 1
                         negative_id = np.apply_along_axis(
                             partial(norm, feature_vectors[anchor]), 1,
                             feature_vectors[other_class_ids]).argmin()
@@ -128,12 +144,18 @@ def train(ds, network, batch_size=150, test_every_n_batches=100,
                         triplet_slice = _offset + (np.arange(3) * _range) + _i
                         delta[triplet_slice] = ltl_grad(feature_vectors[triplet_slice])
                         batch_loss.append(linear_triplet_loss(feature_vectors[triplet_slice]))
-            # batch_iteration_hook(batch_loss=batch_loss,
-            # learning_rate=learning_rate,epoch=epoch
-            tqdm.write("Triplet loss for batch {}".format(sum(batch_loss)))
+            batch_iteration_hook(
+                batch_loss=batch_loss,
+                epoch=epoch,
+                bid=bid
+            )
             network.processBatchBackward(batch, delta,
                                          learningRate=learning_rate)
-        # epoch_iteration_hook(
         network.saveWeights(weights_temp, epoch)
+        epoch_iteration_hook(_network=network,
+                             learning_rate=learning_rate,
+                             epoch=epoch,
+                             weights_path="{}_epoch-{}.cnn".format(
+                                 weights_temp, epoch))
         epoch += 1
         del train_ds

@@ -9,6 +9,8 @@ from operator import add
 from random import sample
 from random import shuffle
 
+import numpy as np
+
 
 def comp(f, g):
     def wrapped(x):
@@ -35,6 +37,39 @@ def random_subsampling(source, num):
         if x != y:
             yield x, y
             c += 1
+
+
+def gen_diagonal_idx(n):
+    i, j = 0, 0
+    while (i, j) != (n, n):
+        yield (i, j)
+        if i == n:
+            j += 1
+        elif j == n:
+            i += 1
+        elif i == 0:
+            j += 1
+        elif j == 0:
+            i += 1
+        direction = i == 0 or j == n
+        for _ in xrange(abs(i - j)):
+            yield (i, j)
+            if direction:
+                j -= 1
+                i += 1
+            else:
+                i -= 1
+                j += 1
+    yield (i, j)
+
+
+def shuffled_permutations(source, num=2):
+    assert num == 2
+    N = len(source)
+    for inx_ in np.random.permutation(N ** num):
+        i, j = (inx_ // N, inx_ % N)
+        if i != j:
+            yield source[i], source[j]
 
 
 class ClassificationDataset(object):
@@ -68,28 +103,36 @@ class ClassificationDataset(object):
         return plot_class_distribution(freq_dict)
 
     def make_train_and_test_split(self, testset_ratio, folds=1):
+        """
+
+        :param testset_ratio:
+        :param folds:
+        :return:
+        """
+        """
+        if folds == 1:
+            train_and_test_filenames = [('train_index', 'test_index')]
+        else:
+            train_and_test_filenames = [
+                tuple("{0}_index.{1}".format(t, i) for t in ("train", "test"))
+                for i in range(1, folds + 1)
+            ]
+        for pair_of_names in train_and_test_filenames:
+            train_samples, test_samples = [], []
+            for k, iterator in self.get_samples_grouped_by_class_id():
+                class_k_samples = list(iterator)
+                number_of_test_samples = max(int(np.floor(len(class_k_samples) * testset_ratio)), 1)
+                class_data_permutation = sample(class_k_samples, len(class_k_samples))
+                train_samples.extend(class_data_permutation[number_of_test_samples:])
+                test_samples.extend(class_data_permutation[0: number_of_test_samples])
+            for filename, list_of_samples in zip(pair_of_names,
+                                                 (train_samples, test_samples)):
+                with open(os.path.join(self.dataset_folder, filename), 'w+') as fh:
+                    fh.write("\n".join(
+                        "{path} {class_id}".format(**s.__dict__)
+                        for s in list_of_samples))
+        """
         raise NotImplementedError()
-        # if folds == 1:
-        #     train_and_test_filenames = [('train_index', 'test_index')]
-        # else:
-        #     train_and_test_filenames = [
-        #         tuple("{0}_index.{1}".format(t, i) for t in ("train", "test"))
-        #         for i in range(1, folds + 1)
-        #     ]
-        # for pair_of_names in train_and_test_filenames:
-        #     train_samples, test_samples = [], []
-        #     for k, iterator in self.get_samples_grouped_by_class_id():
-        #         class_k_samples = list(iterator)
-        #         number_of_test_samples = max(int(np.floor(len(class_k_samples) * testset_ratio)), 1)
-        #         class_data_permutation = sample(class_k_samples, len(class_k_samples))
-        #         train_samples.extend(class_data_permutation[number_of_test_samples:])
-        #         test_samples.extend(class_data_permutation[0: number_of_test_samples])
-        #     for filename, list_of_samples in zip(pair_of_names,
-        #                                          (train_samples, test_samples)):
-        #         with open(os.path.join(self.dataset_folder, filename), 'w+') as fh:
-        #             fh.write("\n".join(
-        #                 "{path} {class_id}".format(**s.__dict__)
-        #                 for s in list_of_samples))
 
     def get_pairs_from_classes(self, method):
         """
@@ -100,7 +143,8 @@ class ClassificationDataset(object):
         method_funs = [
             permutations,
             lazy_almost_shuffled_permutations,
-            random_subsampling
+            random_subsampling,
+            shuffled_permutations
         ]
 
         pairs_dict = {

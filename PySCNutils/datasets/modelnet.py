@@ -8,18 +8,19 @@ from glob import glob
 class ModelNet40(ClassificationDataset, RetrievalDataset):
     name = 'ModelNet40'
     BASEDIR = os.path.join(DATASET_FOLDER, 'ModelNet/ModelNet40/')
-    num_of_tests_per_class = 20
-    num_of_relevant_samples = num_of_tests_per_class - 1
+    num_of_tests_per_class = {}
 
-    def __init__(self):
+    def __init__(self, max_num_of_tests_per_class=20):
         self.search_map_to_class = {}
         self.class_labels = sorted(os.listdir(self.BASEDIR))
         self.class_for_sample = {}
         for _label, _class_name in enumerate(self.class_labels):
-            for fname in sorted(
+            samples = sorted(
                     os.listdir(os.path.join(
                         self.BASEDIR, _class_name, 'test'
-                    )))[:self.num_of_tests_per_class]:
+                    )))[:max_num_of_tests_per_class]
+            self.num_of_tests_per_class[_label] = len(samples)
+            for fname in samples:
                 self.search_map_to_class[fname] = _label
                 self.class_for_sample[fname] = _class_name
 
@@ -43,3 +44,6 @@ class ModelNet40(ClassificationDataset, RetrievalDataset):
         search_set = list(self.search_map_to_class.keys())
         search_set.remove(query_sample)
         return search_set
+
+    def num_relevant_samples_for_query(self, query):
+        return self.num_of_tests_per_class[self.query_to_label(query)] - 1
