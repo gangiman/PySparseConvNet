@@ -3,13 +3,16 @@ from ..plotting.curves import plot_class_distribution
 
 from itertools import permutations
 from itertools import islice
+from itertools import cycle
 from random import choice
 from operator import itemgetter
 from operator import add
+from operator import methodcaller
 from random import sample
 from random import shuffle
 
 import numpy as np
+import pandas as pd
 
 
 def comp(f, g):
@@ -71,6 +74,12 @@ def shuffled_permutations(source, num=2):
         if i != j:
             yield source[i], source[j]
 
+method_funs = [
+    permutations,
+    lazy_almost_shuffled_permutations,
+    random_subsampling,
+    shuffled_permutations
+]
 
 class ClassificationDataset(object):
     # name of the dataset
@@ -134,29 +143,45 @@ class ClassificationDataset(object):
         """
         raise NotImplementedError()
 
-    def get_pairs_from_classes(self, method):
+    def get_limit(self, limit):
+        dist = pd.Series(map(len, self.classes))
+        dist *= dist - 1  # number of unique pairs in iterator
+        multiplier = 1.0
+        if isinstance(limit, dict):
+            multiplier = limit['multiplier']
+            limit = limit['method']
+        if limit is None:
+            limit = 0
+        elif limit in ('median', 'mean', 'max', 'min'):
+            limit = int(np.ceil(
+                multiplier * methodcaller(limit)(dist)))
+        else:
+            assert isinstance(limit, int), "limit should be int"
+        return limit
+
+    def get_pairs_from_classes(self, method, limit_opts=None):
         """
         Choose method to sample pairs from same class
+        :param limit_opts:
         :param method: range from 0 - 2
         :return:
         """
-        method_funs = [
-            permutations,
-            lazy_almost_shuffled_permutations,
-            random_subsampling,
-            shuffled_permutations
-        ]
+        limit = self.get_limit(limit_opts)
+        pairs_dict = {}
+        for _i, _samples in enumerate(self.classes):
+            pairs_iter = method_funs[method](_samples, 2)
+            num_samples = len(_samples)
+            if limit > num_samples*(num_samples - 1):
+                pairs_iter = cycle(pairs_iter)
+            pairs_dict[_i] = islice(pairs_iter, limit)
 
-        pairs_dict = {
-            _i: method_funs[method](_samples, 2)
-            for _i, _samples in enumerate(self.classes)
-        }
         return pairs_dict
 
     def generate_triplets(self, batch_size=150, unique_classes_in_batch=5,
-                          method=0):
+                          method=0, limit=None):
         """ Return list of batch_size samples and list of ranges
         for same class samples
+        :param limit:
         :param batch_size:
         :param unique_classes_in_batch:
         :param method:
@@ -164,7 +189,7 @@ class ClassificationDataset(object):
         """
         assert unique_classes_in_batch <= self.class_count
         assert batch_size % (unique_classes_in_batch * 3) == 0
-        pairs_dict = self.get_pairs_from_classes(method)
+        pairs_dict = self.get_pairs_from_classes(method, limit_opts=limit)
         set_of_all_classes = frozenset(pairs_dict)
         trips_for_one_class = batch_size / unique_classes_in_batch  # 30
         num_pairs = trips_for_one_class / 3  # 10

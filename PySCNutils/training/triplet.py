@@ -67,34 +67,62 @@ def generate_network(dimension=3, l=5, k=32, fn='VLEAKYRELU', nInputFeatures=1,
     return network
 
 
+def generate_wide_network(dimension=3, l=5, filter_mult=None, fn='VLEAKYRELU',
+                          nInputFeatures=1, nClasses=50, p=0.0, cudaDevice=-1):
+    assert len(filter_mult) == l + 1
+    network = SparseNetwork(dimension, nInputFeatures, nClasses,
+                            cudaDevice=cudaDevice)
+    """ for l = 5, k = 32
+    sparse_net.addLeNetLayerMP(32, 2, 1, 3, 2, 'VLEAKYRELU', 0.0)
+    sparse_net.addLeNetLayerMP(64, 2, 1, 3, 2, 'VLEAKYRELU', 0.0)
+    sparse_net.addLeNetLayerMP(96, 2, 1, 3, 2, 'VLEAKYRELU', 0.0)
+    sparse_net.addLeNetLayerMP(128, 2, 1, 3, 2, 'VLEAKYRELU', 0.0)
+    sparse_net.addLeNetLayerMP(160, 2, 1, 3, 2, 'VLEAKYRELU', 0.0)
+    sparse_net.addLeNetLayerMP(192, 2, 1, 1, 1, 'VLEAKYRELU', 0.0)
+    """
+    for i, fm in enumerate(filter_mult):
+        network.addLeNetLayerMP(
+            fm,
+            2, 1, 3 if (i < l) else 1, 2 if (i < l) else 1, fn,
+            p * i * 1.0 / l)
+    return network
+
+
 def nop(*args, **kwargs):
     pass
 
 
 def train(ds, network, experiment_hash,
           batch_size=150, test_every_n_batches=100,
-          unique_classes_in_batch=5, lr_decay_rate=0.025,
+          unique_classes_in_batch=5,
+          lr_policy=nop,
+          momentum_policy=nop,
           pair_taking_method=0,
           render_size=40, weights_dir='./weights',
           in_batch_sample_selection=False, norm_type='cosine', L=1,
           epoch=0, epoch_limit=None,
-          batch_iteration_hook=nop, epoch_iteration_hook=nop):
+          batch_iteration_hook=nop, epoch_iteration_hook=nop,
+          pairs_limit=None):
     linear_triplet_loss, ltl_grad, norm = get_functions(norm_type=norm_type,
                                                         margin=L)
     ds.summary()
     gen = ds.generate_triplets(batch_size=batch_size,
                                unique_classes_in_batch=unique_classes_in_batch,
-                               method=pair_taking_method)
+                               method=pair_taking_method, limit=pairs_limit)
 
     weights_temp = os.path.join(weights_dir, experiment_hash)
     print('Taking {} batches in to dataset'.format(test_every_n_batches))
     if epoch_limit is None:
-        total_number_of_epochs = int(np.ceil(sum(map(
-            lambda l: len(l) * (len(l) - 1), ds.classes
-        )) / (batch_size / 3.0) / test_every_n_batches))
+        if pairs_limit is None:
+            total_pairs_num = sum(map(lambda l: len(l) * (len(l) - 1),
+                                      ds.classes))
+        else:
+            total_pairs_num = ds.get_limit(pairs_limit) * ds.class_count
+        total_number_of_epochs = int(np.ceil(
+            total_pairs_num
+            / (batch_size / 3.0) / test_every_n_batches))
     else:
         total_number_of_epochs = epoch_limit
-
     for _ in tqdm(xrange(total_number_of_epochs),
                   total=total_number_of_epochs, unit="epoch"):
         train_ds = SparseDataset(
@@ -109,7 +137,8 @@ def train(ds, network, experiment_hash,
         if not ranges_for_all:
             break
         batch_gen = network.batch_generator(train_ds, batch_size)
-        learning_rate = 0.003 * np.exp(- lr_decay_rate * epoch)
+        learning_rate = lr_policy(epoch)
+        momentum = momentum_policy(epoch)
         for bid, (batch, _ranges) in tqdm(
                 enumerate(izip(batch_gen, ranges_for_all)),
                 leave=False, unit='batch', total=test_every_n_batches):
@@ -150,10 +179,12 @@ def train(ds, network, experiment_hash,
                 bid=bid
             )
             network.processBatchBackward(batch, delta,
-                                         learningRate=learning_rate)
+                                         learningRate=learning_rate,
+                                         momentum=momentum)
         network.saveWeights(weights_temp, epoch)
         epoch_iteration_hook(_network=network,
                              learning_rate=learning_rate,
+                             momentum=momentum,
                              epoch=epoch,
                              weights_path="{}_epoch-{}.cnn".format(
                                  weights_temp, epoch))

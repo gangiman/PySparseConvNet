@@ -89,3 +89,33 @@ class NNMetric(Metric):
 
     def compute_metric(self, *args):
         return self.metric(*map(self.get_vector, args))
+
+
+class RandomMetric(NNMetric):
+
+    centroids = None
+
+    def __init__(self, vl=192, norm='cos', ds=None, contraction=10):
+        self.vector_length = vl
+        self.contraction_factor = contraction
+        self.ds = ds
+        if ds is not None:
+            c = self.ds.class_count
+            self.centroids = np.hstack((
+                np.eye(c),
+                np.zeros((c, self.vector_length - c))
+            ))
+
+        from uuid import uuid1
+        super(RandomMetric, self).__init__(None, _layer=0, norm=norm,
+                                           net_hash=str(uuid1())[:8])
+        self.extractor = self._extractor
+
+    def _extractor(self, off_path):
+        if self.ds is None:
+            return np.random.randn(self.vector_length)
+        else:
+            off_class_label = off_path.split('/')[-3]
+            class_id = self.ds.class_labels.index(off_class_label)
+            return self.centroids[class_id] + np.random.randn(
+                self.vector_length) / self.contraction_factor
