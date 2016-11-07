@@ -92,6 +92,37 @@ def nop(*args, **kwargs):
     pass
 
 
+def get_decreasing_weights(l, fall='line'):
+    if l == 1:
+        return np.array([1.])
+    line_range = np.arange(1, l - 1, dtype=np.float)[::-1]
+    if fall == 'log':
+        log_range = np.log(line_range + 1)
+    elif fall == 'line':
+        log_range = line_range
+    else:
+        raise Exception("fuuu")
+    log_range /= log_range[0] if log_range.any() else 1
+    full_weights = np.hstack((
+            np.array((1., 1.)),
+            log_range
+        ))
+    return full_weights / full_weights.sum()
+
+
+def weighted_sampling_of_best(arr, best=None):
+    l = len(arr)
+    if l == 1:
+        return 0
+    if best == 'min':
+        sorted_arr_ids = arr.argsort()  # from smallest to biggest
+    elif best == 'max':
+        sorted_arr_ids = arr.argsort()[::-1]  # from smallest to biggest
+    else:
+        raise AssertionError('mode is not min/max.')
+    return np.random.choice(sorted_arr_ids, 1, p=get_decreasing_weights(l))[0]
+
+
 def train(ds, network, experiment_hash,
           batch_size=150, test_every_n_batches=100,
           unique_classes_in_batch=5,
@@ -152,13 +183,16 @@ def train(ds, network, experiment_hash,
                     other_class_ids = np.arange(2 * _range, 3 * _range) + _offset
                     while one_class_ids.any():
                         anchor = one_class_ids[0]
-                        positive_id = np.apply_along_axis(
-                            partial(norm, feature_vectors[anchor]), 1,
-                            feature_vectors[one_class_ids[1:]]).argmax()
+                        positive_id = weighted_sampling_of_best(
+                            np.apply_along_axis(
+                                partial(norm, feature_vectors[anchor]), 1,
+                                feature_vectors[one_class_ids[1:]]),
+                            best='max')
                         positive_id += 1
-                        negative_id = np.apply_along_axis(
-                            partial(norm, feature_vectors[anchor]), 1,
-                            feature_vectors[other_class_ids]).argmin()
+                        negative_id = weighted_sampling_of_best(
+                            np.apply_along_axis(
+                                partial(norm, feature_vectors[anchor]), 1,
+                                feature_vectors[other_class_ids]), best='min')
                         triplet_slice = [anchor,
                                          one_class_ids[positive_id],
                                          other_class_ids[negative_id]]
