@@ -1,5 +1,4 @@
-PySparseConvNet
----------------
+# PySparseConvNet Overview
 
 Fork of [Ben Graham's](http://www2.warwick.ac.uk/fac/sci/statistics/staff/academic-research/graham/)[SparseConvNet](https://github.com/btgraham/SparseConvNet) project but with a wrapper written in Cython. Optimized to process 3D mesh objects.
 
@@ -22,6 +21,41 @@ Interface of PySparseConvNet is much simpler, and consist’s of 4 classes:
 * SparseBatch — Gives access to data in dataset when brocessing separate mini-batches.
 * Off3DPicture — Wrapper class for 3D models in OFF (Object File Format), used to voxelize samples to be processed by SparseNetwork.
 
+## Using PySparseConvNet
+
+We developed and used this library on Linux servers running:
+* Ubuntu Server 14.04-16.04
+* CPython 2.7.3-2.7.11
+* CUDA 7.0-8.0
+* GNU Make 4.0
+* libarmadillo (version 4.450.4)
+* libsparsehash (version 2.0.2-1)
+
+## Python Requirements
+
+Besides environment described above you'll need following python modules:
+
+* Cython >= 0.24
+* numpy >= 1.8
+
+and some stuff that is imported in jupyter notebooks.
+
+## Installation
+
+If you have ubuntu and properly installed CUDA you can do:
+
+```bash
+git clone git@github.com:gangiman/PySparseConvNet.git
+cd PySparseConvNet
+# to install cython, needed for compilation
+pip install -r requirements.txt
+# install original SparseConvNet C++ dependancies
+sudo apt-get install -y libsparsehash-dev libarmadillo-dev
+make full
+make test
+# if you want to install as system module or in your virtual environement
+python setup.py install
+```
 
 
 **************************************************************************
