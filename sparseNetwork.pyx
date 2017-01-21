@@ -17,6 +17,7 @@ from _SparseConvNet cimport UNLABELEDBATCH
 
 from _SparseConvNet cimport NetworkInNetworkLayer
 from _SparseConvNet cimport OffSurfaceModelPicture
+from _SparseConvNet cimport VoxelPicture
 from _SparseConvNet cimport Picture
 from _SparseConvNet cimport SpatiallySparseDataset
 from _SparseConvNet cimport activation
@@ -36,6 +37,8 @@ cimport numpy as np
 
 from copy import deepcopy
 from pprint import pprint
+
+from libcpp.vector cimport vector
 
 
 cdef class SparseBatch:
@@ -340,6 +343,14 @@ cdef class SparseDataset:
         return self.ssd.nClasses
 
     @property
+    def nFeatures(self):
+        return self.ssd.nFeatures
+
+    @property
+    def nSamples(self):
+        return self.ssd.pictures.size()
+
+    @property
     def name(self):
         return self.ssd.name
 
@@ -350,6 +361,9 @@ cdef class SparseDataset:
         self.ssd.repeatSamples(nreps)
 
     def add_picture(self, Off3DPicture picture):
+        self.ssd.pictures.push_back(<Picture*>picture.pic)
+
+    def add_voxel_picture(self, PyVoxelPicture picture):
         self.ssd.pictures.push_back(<Picture*>picture.pic)
 
 
@@ -376,6 +390,36 @@ cdef class Off3DPicture:
         if not self.pic.is_loaded:
             self.pic.loadPicture()
         self.pic.normalize()
+        self.features.resize(0)
+        self.pic.codifyInputData(self.grid, self.features,
+                                 self.nSpatialSites, spatialSize)
+        cdef list pairs = []
+        cdef SparseGridIter it = self.grid.mp.begin()
+        while it != self.grid.mp.end():
+            pairs.append(deref(it))
+            inc(it)
+        return pairs, self.features
+
+
+cdef class PyVoxelPicture:
+    """wraps VoxelPicture
+    """
+    cdef VoxelPicture* pic
+    cdef SparseGrid grid
+    cdef vector[float] features
+    cdef int nSpatialSites
+
+    def __cinit__(self, vector[float] voxels, int renderSize, int label=-1, int n_features=1):
+        self.nSpatialSites = 0
+        self.pic = new VoxelPicture(voxels, renderSize, label, n_features)
+
+
+    #def __dealloc__(self):
+    #    del self.pic
+    #     # del self.grid
+    #     # del self.features
+
+    def codifyInputData(self, int spatialSize):
         self.features.resize(0)
         self.pic.codifyInputData(self.grid, self.features,
                                  self.nSpatialSites, spatialSize)

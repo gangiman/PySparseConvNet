@@ -22,6 +22,7 @@ BatchProducer::BatchProducer(SparseConvNetCUDA &cnn,
       batchSize(batchSize) {
   assert(batchSize > 0);
   nBatches = (dataset.pictures.size() + batchSize - 1) / batchSize;
+  // std::cout << "n_batches: " << nBatches << std::endl;
   permutation = range(dataset.pictures.size());
   if (dataset.type == TRAINBATCH && dataset.do_shuffle) {
     RNG rng;
@@ -69,6 +70,9 @@ void BatchProducer::preprocessBatch(int c, int cc, RNG &rng) {
     pic.reset();
     dataset.pictures[permutation[i]]->unloadPicture();
   }
+  // std::cout << cnn.batchPool[cc].interfaces[0].sub->features.size() << std::endl;
+  // std::cout << cnn.batchPool[cc].interfaces[0].nFeatures * cnn.batchPool[cc].interfaces[0].nSpatialSites << std::endl;
+  // std::cout << cnn.batchPool[cc].interfaces[0].nSpatialSites << std::endl;
   assert(cnn.batchPool[cc].interfaces[0].sub->features.size() ==
          cnn.batchPool[cc].interfaces[0].nFeatures *
              cnn.batchPool[cc].interfaces[0].nSpatialSites);
