@@ -346,8 +346,10 @@ pd_report SparseConvNetCUDA::processDataset(SpatiallySparseDataset &dataset,
     f.open("unlabelledData.predictions");
     g.open("unlabelledData.probabilities");
   }
-
+  int batch_counter = 0;
   while (SpatiallySparseBatch *batch = bp.nextBatch()) {
+    // std::cout << "batch: " << batch_counter << std::endl;
+    batch_counter++;
     processBatch(*batch, learningRate, momentum, f, g);
     errorRate += batch->mistakes * 1.0 / dataset.pictures.size();
     nll += batch->negativeLogLikelihood * 1.0 / dataset.pictures.size();
@@ -426,7 +428,9 @@ std::vector<struct pd_report> SparseConvNetCUDA::processDatasetRepeatTest(
   std::vector<struct pd_report> reports;
   for (int rep = 1; rep <= nReps; ++rep) {
     BatchProducer bp(*this, dataset, inputSpatialSize, batchSize);
+    int batch_counter = 0;
     while (SpatiallySparseBatch *batch = bp.nextBatch()) {
+      // std::cout << "batch: " << batch_counter << std::endl;
       std::ofstream f, g;
       processBatch(*batch, 0, 0, f, g);
       for (int i = 0; i < batch->batchSize; ++i) {

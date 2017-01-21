@@ -8,14 +8,43 @@ import os
 import math
 
 
-def create_DeepC2Network(dimension, l, k, fn, nInputFeatures, nClasses, p, nThreads=1):
+def create_DeepC2Network(dimension, n_layers, n_filters_multiplier, fn, nInputFeatures,
+                         nClasses, dropout, nThreads=1):
     sparse_net = SparseNetwork(dimension, nInputFeatures, nClasses, nThreads=nThreads)
-    for i in range(l + 1):
+    for i in range(n_layers + 1):
         sparse_net.addLeNetLayerMP(
-            (i + 1) * k, 2, 1, 3 if (i < l) else 1, 2 if (i < l) else 1, fn,
-            p * i * 1.0 / l)
+            (i + 1) * n_filters_multiplier,
+            2,
+            1,
+            3 if (i < n_layers) else 1,
+            2 if (i < n_layers) else 1,
+            fn,
+            dropout * i * 1.0 / n_layers)
     sparse_net.addSoftmaxLayer()
     return sparse_net
+
+
+def custom_DeepC2Network(dimension, n_filters_multiplier,
+                         fsizes, fstrides, pool_sizes, pool_strides,
+                         fn, nInputFeatures,
+                         nClasses, dropout, nThreads=1):
+    sparse_net = SparseNetwork(dimension, nInputFeatures, nClasses, nThreads=nThreads)
+    n_layers = len(fsizes)
+    assert(len(fsizes) == len(fstrides))
+    assert(len(fsizes) == len(pool_sizes))
+    assert(len(fsizes) == len(pool_strides))
+    for i in xrange(n_layers + 1):
+        sparse_net.addLeNetLayerMP(
+            (i + 1) * n_filters_multiplier,
+            fsizes[i] if i < n_layers else 2,
+            fstrides[i] if i < n_layers else 1,
+            pool_sizes[i] if i < n_layers else 1,
+            pool_strides[i] if i < n_layers else 1,
+            fn,
+            dropout * i * 1.0 / n_layers)
+    sparse_net.addSoftmaxLayer()
+    return sparse_net
+
 
 
 def create_dC2():
