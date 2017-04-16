@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 try:
     from PySparseConvNet import PyVoxelPicture
 except ImportError:
@@ -35,9 +36,7 @@ class TestVoxelPicture(unittest.TestCase):
         tensor[1, 0, 1] = 1
         tensor[2, 2, 2] = 1
 
-        pic = PyVoxelPicture(
-            tensor.ravel().tolist(),
-            spatial_size)
+        pic = PyVoxelPicture(tensor.ravel().tolist(), spatial_size)
         pairs, feat = pic.codifyInputData(spatial_size)
         sparse_row_matrix = convert_pairs_and_features_to_map(
             pairs, feat, spatial_size, n_features)
@@ -66,7 +65,7 @@ class TestVoxelPicture(unittest.TestCase):
                              spatial_size=spatial_size)
         # extracting indices and features must be the same
         # as ones it was created from
-        returned_indices, returned_features = pic.codifyInputData()
+        returned_indices, returned_features = pic.codifyInputData(spatial_size)
         np.testing.assert_almost_equal(returned_indices, indices)
         np.testing.assert_almost_equal(returned_features, features)
 

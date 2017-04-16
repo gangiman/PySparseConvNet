@@ -15,6 +15,8 @@ public:
   int n_features;
   std::string picture_path;
   VoxelPicture(std::vector<float>& voxels, int renderSize=0, int label_=-1, int n_features=1);
+  VoxelPicture(const std::vector<std::vector<int>>& indices, const std::vector<int>& features, int spatial_size);
+
   virtual ~VoxelPicture() {
     points.reset();
   }

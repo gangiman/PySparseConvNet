@@ -413,6 +413,10 @@ cdef class PyVoxelPicture:
         self.nSpatialSites = 0
         self.pic = new VoxelPicture(voxels, renderSize, label, n_features)
 
+    def __cinit__(self, vector[vector[int]] indices, vector[int] features, int spatial_size):
+        self.nSpatialSites = 0
+        self.pic = new VoxelPicture(indices, features, spatial_size)
+
 
     #def __dealloc__(self):
     #    del self.pic

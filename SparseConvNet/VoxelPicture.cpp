@@ -57,6 +57,22 @@ int mapToGridVoxels(float coord, int inputFieldSize) {
 //   }
 // }
 
+
+//VoxelPicture(vector[vector[int]] indices, vector[int] features, int spatial_size)
+VoxelPicture::VoxelPicture(const std::vector<std::vector<int>>& indices,
+                           const std::vector<int>& features, int spatial_size)
+    : Picture(-1)
+    , renderSize(-1)
+    , n_features(-1)
+{
+    assert(indices.size() == features.size());
+
+    for (int i{}; i < indices.size(); ++i) {
+        assert(indices[i].size() == 3);
+        int n = indices[i][0] * renderSize * renderSize + indices[i][1] * renderSize + indices[i][2];
+    }
+}
+
 VoxelPicture::VoxelPicture(std::vector<float>& voxels,
                            int renderSize, int label, int n_features)
     : Picture(label), renderSize(renderSize), n_features(n_features) {

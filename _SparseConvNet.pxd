@@ -277,6 +277,7 @@ cdef extern from "SparseConvNet/VoxelPicture.h":
         bool is_loaded
         int label # -1 for unknown
         VoxelPicture(vector[float] voxels, int renderSize, int label_, int n_features)
+        VoxelPicture(vector[vector[int]] indices, vector[int] features, int spatial_size)
         void loadPicture()
         void normalize() # Fit centrally in the cube [-scale_n/2,scale_n/2]^3
         void random_rotation(RNG &rng)
