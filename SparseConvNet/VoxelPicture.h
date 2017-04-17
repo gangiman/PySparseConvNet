@@ -7,25 +7,21 @@
 
 class VoxelPicture : public Picture {
 private:
-  arma::mat points;
   std::vector<int> non_empty_indices;
   std::vector<float> voxel_features;
 public:
   int renderSize;
   int n_features;
-  std::string picture_path;
-  VoxelPicture(std::vector<float>& voxels, int renderSize=0, int label_=-1, int n_features=1);
-  VoxelPicture(const std::vector<std::vector<int>>& indices, const std::vector<int>& features, int spatial_size);
+  VoxelPicture(const std::vector<std::vector<int>>& indices,
+                           const std::vector<std::vector<float>>& input_features,
+                           int renderSize, int label, int n_features);
 
   virtual ~VoxelPicture() {
-    points.reset();
+    non_empty_indices.clear();
+    voxel_features.clear();
   }
   void loadPicture();
   void unloadPicture() override;
-  void normalize(); // Fit centrally in the cube [-scale_n/2,scale_n/2]^3
-  void random_rotation(RNG &rng);
-  void jiggle(RNG &rng, float alpha);
-  void affineTransform(RNG &rng, float alpha);
   void codifyInputData(SparseGrid &grid, std::vector<float> &features, int &nSpatialSites, int spatialSize);
   Picture *distort(RNG &rng, batchType type = TRAINBATCH);
 };

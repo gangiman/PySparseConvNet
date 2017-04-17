@@ -409,13 +409,12 @@ cdef class PyVoxelPicture:
     cdef vector[float] features
     cdef int nSpatialSites
 
-    def __cinit__(self, vector[float] voxels, int renderSize, int label=-1, int n_features=1):
-        self.nSpatialSites = 0
-        self.pic = new VoxelPicture(voxels, renderSize, label, n_features)
+    def __cinit__(self, np.ndarray[long, mode="c", ndim=2] indices,
+                     np.ndarray[double, mode="c", ndim=2] input_features,
+                           int renderSize, int label=-1, int n_features=1):
 
-    def __cinit__(self, vector[vector[int]] indices, vector[int] features, int spatial_size):
         self.nSpatialSites = 0
-        self.pic = new VoxelPicture(indices, features, spatial_size)
+        self.pic = new VoxelPicture(indices, input_features, renderSize, label, n_features)
 
 
     #def __dealloc__(self):

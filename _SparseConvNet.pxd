@@ -272,20 +272,20 @@ cdef extern from "SparseConvNet/Off3DFormatPicture.h":
 
 cdef extern from "SparseConvNet/VoxelPicture.h":
     cdef cppclass VoxelPicture:
-        mat points
+        vector[int] non_empty_indices
+        vector[float] voxel_features
         int renderSize
+        int n_features
         bool is_loaded
         int label # -1 for unknown
-        VoxelPicture(vector[float] voxels, int renderSize, int label_, int n_features)
-        VoxelPicture(vector[vector[int]] indices, vector[int] features, int spatial_size)
+        VoxelPicture(vector[vector[int]] indices,
+                     vector[vector[float]] input_features,
+                           int renderSize, int label, int n_features)
         void loadPicture()
-        void normalize() # Fit centrally in the cube [-scale_n/2,scale_n/2]^3
-        void random_rotation(RNG &rng)
-        void jiggle(RNG &rng, float alpha)
-        void affineTransform(RNG &rng, float alpha)
         void codifyInputData(SparseGrid &grid, vector[float] &features,
                              int &nSpatialSites, int spatialSize)
         Picture *distort(RNG &rng, batchType type)
+
 
 
 

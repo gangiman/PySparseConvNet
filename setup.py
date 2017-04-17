@@ -65,7 +65,7 @@ ext = Extension('PySparseConvNet',
                 language='c++',
                 extra_compile_args={
                     'g++': gpp_flags,
-                    'nvcc': ['-arch=sm_20', '--std=c++11', '-O3',
+                    'nvcc': ['-arch=sm_50', '--std=c++11', '-O3',
                              "-Xcompiler", "-fPIC"]
                 },
                 include_dirs=[numpy_include, '/usr/local/cuda/include'])
