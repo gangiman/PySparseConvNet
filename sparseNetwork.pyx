@@ -297,6 +297,22 @@ cdef class SparseNetwork:
         interfaces = self.net.cnn.get().layer_activations(deref(dataset.ssd))
         return interfaces
 
+
+    def layer_activations_for_dataset(self, SparseDataset dataset):
+        """
+        Method to get all activations from all layers in the network
+        :param dataset: SparseDataset of UNLABELEDBATCH type with 1 sample 
+        :return: a list of activation structures with locations and features
+        """
+        if self.input_spatial_size < 0:
+            self.input_spatial_size = self.net.cnn.get().\
+                computeInputSpatialSize(1)
+        cdef vector[activation] interfaces
+        assert dataset.type == _unlabeled
+        assert dataset.nSamples == 1
+        interfaces = self.net.cnn.get().layer_activations(deref(dataset.ssd))
+        return interfaces
+
 cdef char* _train = 'TRAINBATCH'
 cdef char* _test = 'TESTBATCH'
 cdef char* _unlabeled = 'UNLABELEDBATCH'

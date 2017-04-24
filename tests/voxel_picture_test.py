@@ -1,29 +1,59 @@
 from __future__ import absolute_import
 try:
-    from PySparseConvNet import PyVoxelPicture
+    import PySparseConvNet as pscn
 except ImportError:
     import sys
     import os
     sys.path.insert(0, os.path.join(__file__, '..'))
-    from PySparseConvNet import PyVoxelPicture
+    import PySparseConvNet as pscn
 
 import numpy as np
 import unittest
+from deepC2Network import create_dC2
 
 
-def convert_pairs_and_features_to_map(pairs, features, ss, nFeatures):
+def create_dummy_sparse_indicies_and_features(spatial_size=6, sparcity=.2,
+                                              n_features=1):
+    total_voxels = np.power(spatial_size, 3)
+    active_voxels = int(np.ceil(sparcity * total_voxels))
+    voxels_ids = np.unique(np.random.randint(
+        0, high=total_voxels, size=(active_voxels,)))
+    voxels_ids.sort()
+    total_voxels = voxels_ids.shape[0]
+    features = np.r_[
+        np.zeros((n_features, 1), dtype=np.float),
+        np.random.random((n_features * total_voxels, 1))
+    ]
+
+    # size of 3-d tensor, all sides are equal
+    return convert_pairs_and_features_to_map(
+        list(zip(voxels_ids, np.arange(1, total_voxels + 1))),
+        features.reshape(-1).tolist(),
+        spatial_size,
+        n_features
+    )
+
+
+def convert_pairs_and_features_to_map(
+        pairs, features, spatial_size, n_features):
     features = np.asarray(features)
     indices = np.zeros((len(pairs), 3), dtype=np.int)
-    output_features = np.zeros((len(pairs), nFeatures), dtype=np.float)
+    output_features = np.zeros((len(pairs), n_features), dtype=np.float)
     for i, (key_id, feature_idx) in enumerate(pairs):
         indices[i, :] = (
-                (key_id / ss / ss) % ss,
-                (key_id / ss) % ss,
-                key_id % ss)
+            (key_id / spatial_size / spatial_size) % spatial_size,
+            (key_id / spatial_size) % spatial_size,
+            key_id % spatial_size)
         output_features[i, :] = features[
-            feature_idx * (1 + np.arange(nFeatures))]
+            feature_idx * (1 + np.arange(n_features))]
 
     return indices, output_features
+
+
+def get_test_voxel_picture(spatial_size=126):
+    ind, feat = create_dummy_sparse_indicies_and_features(
+        spatial_size=spatial_size, sparcity=0.05)
+    return pscn.PyVoxelPicture(ind, feat, spatial_size)
 
 
 class TestVoxelPicture(unittest.TestCase):
@@ -44,7 +74,7 @@ class TestVoxelPicture(unittest.TestCase):
         # in this case num_features=1
         features = np.ones((indices.shape[0], 1), dtype=np.float)
         # creating a picture object
-        pic = PyVoxelPicture(indices, features, spatial_size)
+        pic = pscn.PyVoxelPicture(indices, features, spatial_size)
         # extracting indices and features must be the same
         # as ones it was created from
         returned_indices, returned_features = pic.codifyInputData(spatial_size)
@@ -53,3 +83,21 @@ class TestVoxelPicture(unittest.TestCase):
         self.assertEqual(set(map(tuple, sparse_indicies.tolist())),
                          set(map(tuple, indices.tolist())))
         np.testing.assert_almost_equal(features, sparse_features)
+
+    def test_layers_activation_for_voxel_picture(self):
+        pic = get_test_voxel_picture()
+        ds = pscn.SparseDataset('test_ds', 'UNLABELEDBATCH', 1, 40)
+        ds.add_voxel_picture(pic)
+        net = create_dC2()
+        lois = net.layer_activations_for_dataset(ds)
+        self.assertEqual(len(lois), 19)
+
+    def test_batch_processing_for_voxel_picture(self):
+        pic = get_test_voxel_picture()
+        ds = pscn.SparseDataset('test_ds', 'TRAINBATCH', 1, 40)
+        ds.add_voxel_picture(pic)
+        net = create_dC2()
+        batch_gen = net.batch_generator(ds, 1)
+        batch = next(batch_gen)
+        batch_output = net.processBatchForward(batch)
+        self.assertEqual(batch_output['spatialSize'], 1)
