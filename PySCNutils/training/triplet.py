@@ -56,38 +56,6 @@ def get_functions(norm_type='cosine', margin=0.1, norm_for_l2=True):
     return _linear_triplet_loss, grad(_linear_triplet_loss), norm
 
 
-def generate_network(dimension=3, l=5, k=32, fn='VLEAKYRELU', nInputFeatures=1,
-                     nClasses=50, p=0.0, cudaDevice=-1):
-    network = SparseNetwork(dimension, nInputFeatures, nClasses,
-                            cudaDevice=cudaDevice)
-    for i in range(l + 1):
-        network.addLeNetLayerMP(
-            (i + 1) * k, 2, 1, 3 if (i < l) else 1, 2 if (i < l) else 1, fn,
-            p * i * 1.0 / l)
-    return network
-
-
-def generate_wide_network(dimension=3, l=5, filter_mult=None, fn='VLEAKYRELU',
-                          nInputFeatures=1, nClasses=50, p=0.0, cudaDevice=-1):
-    assert len(filter_mult) == l + 1
-    network = SparseNetwork(dimension, nInputFeatures, nClasses,
-                            cudaDevice=cudaDevice)
-    """ for l = 5, k = 32
-    sparse_net.addLeNetLayerMP(32, 2, 1, 3, 2, 'VLEAKYRELU', 0.0)
-    sparse_net.addLeNetLayerMP(64, 2, 1, 3, 2, 'VLEAKYRELU', 0.0)
-    sparse_net.addLeNetLayerMP(96, 2, 1, 3, 2, 'VLEAKYRELU', 0.0)
-    sparse_net.addLeNetLayerMP(128, 2, 1, 3, 2, 'VLEAKYRELU', 0.0)
-    sparse_net.addLeNetLayerMP(160, 2, 1, 3, 2, 'VLEAKYRELU', 0.0)
-    sparse_net.addLeNetLayerMP(192, 2, 1, 1, 1, 'VLEAKYRELU', 0.0)
-    """
-    for i, fm in enumerate(filter_mult):
-        network.addLeNetLayerMP(
-            fm,
-            2, 1, 3 if (i < l) else 1, 2 if (i < l) else 1, fn,
-            p * i * 1.0 / l)
-    return network
-
-
 def nop(*args, **kwargs):
     pass
 

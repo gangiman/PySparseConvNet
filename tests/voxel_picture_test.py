@@ -9,7 +9,7 @@ except ImportError:
 
 import numpy as np
 import unittest
-from deepC2Network import create_dC2
+from PySCNutils.networks import create_dC2
 
 
 def create_dummy_sparse_indicies_and_features(spatial_size=6, sparcity=.2,

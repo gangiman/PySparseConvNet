@@ -11,7 +11,8 @@ def train(ds, network, experiment_hash,
           batch_size=150, test_every_n_epochs=5,
           lr_policy=nop,
           momentum_policy=nop,
-          render_size=40, weights_dir='./weights',
+          dataset_gen_args=(),
+          weights_dir='./weights',
           epoch=0, epoch_limit=100,
           train_iteration_hook=nop,
           test_iteration_hook=nop):
@@ -19,7 +20,7 @@ def train(ds, network, experiment_hash,
     weights_temp = os.path.join(weights_dir, experiment_hash)
 
     testSet, trainSet, labels = ds.generate_train_test_dataset(
-        renderSize=render_size)
+        **dict(dataset_gen_args))
 
     for _ in tqdm(xrange(epoch_limit),
                   total=epoch_limit, unit="epoch"):

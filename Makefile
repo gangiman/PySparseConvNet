@@ -15,7 +15,7 @@ build: clean
 	python setup.py build_ext -if || true
 
 test:
-	python -m unittest test_scn
+	python -m unittest tests/
 
 full: build
 	@$(MAKE) -C SparseConvNet $(MAKECMDGOALS)

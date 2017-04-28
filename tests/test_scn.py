@@ -6,11 +6,64 @@ from PySparseConvNet import SparseNetwork
 from PySparseConvNet import SparseDataset
 from PySparseConvNet import Off3DPicture
 
+import os
+import numpy as np
 
-from deepC2Network import create_dC2
-from deepC2Network import load_and_get_weights
-from deepC2Network import load_3d_off
-from deepC2Network import learn_simple_network
+from PySCNutils.networks import create_dC2
+
+
+def load_and_get_weights(deepC2):
+    baseName = "SparseConvNet/weights/ModelNet"
+    epoch = 20
+    deepC2.loadWeights(baseName, epoch)
+    return deepC2.get_weights()
+
+
+def load_3d_off():
+    path = "SparseConvNet/Data/ModelNet/airplane/train/airplane_0511.off"
+    print("Creating Off3DPicture object")
+    picture = Off3DPicture(path, 40)
+    print("Codifying...")
+    pairs, features = picture.codifyInputData(126)
+    print ("done")
+    return pairs
+
+
+def generate_modelnet_dataset(full=False, limit=-1):
+    number_of_features = 1
+    renderSize = 40
+    if full:
+        data_folder = "SparseConvNet/Data/ModelNet/"
+    else:
+        data_folder = "SparseConvNet/Data/_ModelNet/"
+    class_folders = os.listdir(data_folder)
+    class_folders.sort()
+    number_of_classes = len(class_folders)
+    sparse_dataset = SparseDataset("ModelNet (Train subset)", 'TRAINBATCH',
+                                   number_of_features, number_of_classes)
+    for class_id, folder in enumerate(class_folders):
+        dirpath = os.path.join(data_folder, folder, 'train')
+        for _count, filename in enumerate(os.listdir(dirpath)):
+            if _count > limit > 0:
+                break
+            sparse_dataset.add_picture(Off3DPicture(
+                os.path.join(dirpath, filename), renderSize, label=class_id))
+    # sparse_dataset.repeatSamples(10)
+    return sparse_dataset
+
+
+def learn_simple_network(full=False, batchSize=10, limit=1, epoch=2):
+    network = create_dC2()
+    print("Created network")
+    dataset = generate_modelnet_dataset(full=full, limit=limit)
+    dataset.summary()
+    print("Created dataset {0}".format(dataset.name))
+    for epoch in xrange(1, epoch):
+        learning_rate = 0.003 * np.exp(-0.05 / 2 * epoch)
+        # print("epoch {0}, lr={1} ".format(epoch, learning_rate), end='')
+        network.processDataset(dataset, batchSize=batchSize,
+                               learningRate=learning_rate)
+
 
 class TestHighLevelLogic(unittest.TestCase):
 
@@ -67,8 +120,6 @@ class TestTraining(unittest.TestCase):
                 p * i * 1.0 / l)
 
         print("Created network")
-
-        from deepC2Network import generate_modelnet_dataset
 
         dataset = generate_modelnet_dataset(full=True, limit=1)
 
